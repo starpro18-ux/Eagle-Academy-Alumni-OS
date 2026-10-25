@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eagle Academy · Review queue</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .review-card { max-width: 1080px; margin: 48px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+      .auth-view.hidden { display: none; }
+      .setup-note { padding: 12px; color: #755821; background: #fffaf0; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
+      .status { min-height: 22px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+      .status.error { color: #9b4c4c; }
+      .status.success { color: var(--green); }
+      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #f1f8f3; border-radius: 10px; font-size: 13px; }
+      .review-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 32px; }
+      .review-actions a { text-decoration: none; }
+      .review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+      .review-section { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfa; }
+      .review-section.wide { grid-column: 1 / -1; }
+      .review-section h3 { margin: 0; }
+      .review-list { display: grid; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+      .review-item { padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+      .review-item-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+      .review-title { font-weight: 750; overflow-wrap: anywhere; }
+      .review-body { margin: 10px 0 0; color: var(--muted); line-height: 1.5; white-space: pre-wrap; }
+      .review-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 12px; }
+      .tag { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: #eef2ed; color: var(--ink); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+      .tag.review { background: #fff4d7; color: #755821; }
+      .tag.risk { background: #fbe8e8; color: #8c4242; }
+      .empty { color: var(--muted); font-size: 13px; line-height: 1.5; }
+      @media (max-width: 780px) { .review-grid { grid-template-columns: 1fr; } .review-section.wide { grid-column: auto; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">EAGLE ACADEMY ALUMNI ASSOCIATION</p>
+          <h1>Review queue</h1>
+          <p class="lede">Human review stays in control. This view surfaces organization-scoped work without applying actions.</p>
+        </div>
+        <div class="mode-pill"><span class="pulse"></span> Review only</div>
+      </header>
+
+      <section class="review-card" aria-live="polite">
+        <div id="setup-view" class="auth-view">
+          <p class="setup-note">This page needs a local <code>config.js</code> copied from <code>config.example.js</code>. Only use a publishable key in browser code.</p>
+        </div>
+
+        <div id="sign-in-view" class="auth-view hidden">
+          <p class="eyebrow">AUTHENTICATION</p>
+          <h2>Sign in to continue</h2>
+          <p class="subtle">Review data is available only to authenticated organization members.</p>
+          <form id="sign-in-form" class="form-stack">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="owner@example.org" />
+            <button class="primary" type="submit">Send magic link <span>→</span></button>
+          </form>
+        </div>
+
+        <div id="app-view" class="auth-view hidden">
+          <div class="signed-in"><span>Signed in as <strong id="signed-in-email"></strong><br /><small id="organization-name"></small></span><button id="sign-out" class="text-button" type="button">Sign out</button></div>
+          <div class="review-actions">
+            <a class="text-button" href="./workspace.html">Back to workspace</a>
+            <a class="primary" href="./ingest.html">Add source document <span>→</span></a>
+          </div>
+          <p class="eyebrow">HUMAN CONTROLLED</p>
+          <h2>Review queue</h2>
+          <p class="subtle">Recommendations are proposals. Commitments and events are context. No approval or operational action is performed from this page yet.</p>
+
+          <div class="review-grid">
+            <section class="review-section wide">
+              <p class="eyebrow">RECOMMENDATIONS</p>
+              <h3>Proposed decisions</h3>
+              <ul id="recommendation-list" class="review-list"></ul>
+            </section>
+            <section class="review-section">
+              <p class="eyebrow">COMMITMENTS</p>
+              <h3>Accountability context</h3>
+              <ul id="commitment-list" class="review-list"></ul>
+            </section>
+            <section class="review-section">
+              <p class="eyebrow">EVENTS</p>
+              <h3>Upcoming work</h3>
+              <ul id="event-list" class="review-list"></ul>
+            </section>
+            <section class="review-section wide">
+              <p class="eyebrow">SOURCES</p>
+              <h3>Ingestion status</h3>
+              <ul id="source-list" class="review-list"></ul>
+            </section>
+          </div>
+        </div>
+
+        <p id="status" class="status" role="status"></p>
+      </section>
+    </main>
+    <script src="./config.js"></script>
+    <script type="module" src="./review.js"></script>
+  </body>
+</html>
