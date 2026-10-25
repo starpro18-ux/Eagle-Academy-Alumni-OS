@@ -9,6 +9,7 @@ const signInForm = document.querySelector("#sign-in-form");
 const bootstrapForm = document.querySelector("#bootstrap-form");
 const signedInEmail = document.querySelector("#signed-in-email");
 const signOutButton = document.querySelector("#sign-out");
+const nextActions = document.querySelector("#next-actions");
 
 let supabase;
 
@@ -23,6 +24,35 @@ function show(view) {
   });
 }
 
+async function renderSession(session) {
+  if (!session) {
+    show(signInView);
+    nextActions.classList.add("hidden");
+    return;
+  }
+
+  signedInEmail.textContent = session.user.email || "authenticated user";
+  show(bootstrapView);
+
+  const { data: memberships, error } = await supabase
+    .from("organization_memberships")
+    .select("organization_id")
+    .eq("user_id", session.user.id)
+    .limit(1);
+
+  if (error) {
+    setStatus(error.message, "error");
+    return;
+  }
+
+  if (memberships?.length) {
+    nextActions.classList.remove("hidden");
+    setStatus("Your workspace already exists. Continue to the protected workspace.", "success");
+  } else {
+    nextActions.classList.add("hidden");
+  }
+}
+
 async function boot() {
   if (!config.url || !config.publishableKey || config.url.includes("YOUR_PROJECT_REF")) {
     show(setupView);
@@ -33,23 +63,16 @@ async function boot() {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
   });
 
-  supabase.auth.onAuthStateChange((_event, session) => renderSession(session));
+  supabase.auth.onAuthStateChange((_event, session) => {
+    void renderSession(session);
+  });
   const { data, error } = await supabase.auth.getSession();
   if (error) {
     setStatus(error.message, "error");
     show(signInView);
     return;
   }
-  renderSession(data.session);
-}
-
-function renderSession(session) {
-  if (!session) {
-    show(signInView);
-    return;
-  }
-  signedInEmail.textContent = session.user.email || "authenticated user";
-  show(bootstrapView);
+  await renderSession(data.session);
 }
 
 signInForm.addEventListener("submit", async (event) => {
@@ -79,13 +102,15 @@ bootstrapForm.addEventListener("submit", async (event) => {
     setStatus(error.message, "error");
     return;
   }
-  setStatus(`Workspace “${data.name}” is ready. You are the owner.`, "success");
+  nextActions.classList.remove("hidden");
+  setStatus(`Workspace “${data.name}” is ready. Continue to the protected workspace.`, "success");
 });
 
 signOutButton.addEventListener("click", async () => {
   const { error } = await supabase.auth.signOut();
   setStatus(error ? error.message : "Signed out.", error ? "error" : "success");
+  nextActions.classList.add("hidden");
   if (!error) show(signInView);
 });
 
-boot();
+void boot();
