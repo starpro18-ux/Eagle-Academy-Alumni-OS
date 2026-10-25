@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eagle Academy · Secure onboarding</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .onboarding-card { max-width: 560px; margin: 80px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+      .form-stack { display: grid; gap: 12px; margin-top: 24px; }
+      label { color: var(--muted); font-size: 12px; font-weight: 750; }
+      input { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 12px; color: var(--ink); background: #fff; }
+      .form-stack button { width: fit-content; }
+      .auth-view.hidden { display: none; }
+      .setup-note { padding: 12px; color: #755821; background: #fffaf0; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
+      .status { min-height: 22px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+      .status.error { color: #9b4c4c; }
+      .status.success { color: var(--green); }
+      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #f1f8f3; border-radius: 10px; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">EAGLE ACADEMY ALUMNI ASSOCIATION</p>
+          <h1>Secure onboarding</h1>
+          <p class="lede">Authenticate first. Then create the organization workspace you own.</p>
+        </div>
+        <div class="mode-pill"><span class="pulse"></span> Auth required</div>
+      </header>
+
+      <section class="onboarding-card" aria-live="polite">
+        <div id="setup-view" class="auth-view">
+          <p class="setup-note">This page needs a local <code>config.js</code> copied from <code>config.example.js</code>. Only use a publishable key in browser code.</p>
+        </div>
+
+        <div id="sign-in-view" class="auth-view hidden">
+          <p class="eyebrow">STEP 1</p>
+          <h2>Sign in with a magic link</h2>
+          <p class="subtle">The link returns you here. No password or secret key is handled by this page.</p>
+          <form id="sign-in-form" class="form-stack">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="owner@example.org" />
+            <button class="primary" type="submit">Send magic link <span>→</span></button>
+          </form>
+        </div>
+
+        <div id="bootstrap-view" class="auth-view hidden">
+          <div class="signed-in"><span>Signed in as <strong id="signed-in-email"></strong></span><button id="sign-out" class="text-button" type="button">Sign out</button></div>
+          <p class="eyebrow" style="margin-top: 28px;">STEP 2</p>
+          <h2>Create your workspace</h2>
+          <p class="subtle">This creates one organization and makes you its owner. A user can only bootstrap once.</p>
+          <form id="bootstrap-form" class="form-stack">
+            <label for="org-name">Organization name</label>
+            <input id="org-name" name="org_name" required minlength="2" maxlength="120" value="Eagle Academy Alumni Association" />
+            <label for="org-slug">Workspace slug</label>
+            <input id="org-slug" name="org_slug" required minlength="3" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="eagle-academy-alumni" />
+            <button class="primary" type="submit">Create workspace <span>→</span></button>
+          </form>
+        </div>
+
+        <p id="status" class="status" role="status"></p>
+      </section>
+    </main>
+    <script type="module" src="./onboarding.js"></script>
+  </body>
+</html>
