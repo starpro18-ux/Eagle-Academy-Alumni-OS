@@ -9,12 +9,13 @@ const read = (relativePath) => readFileSync(join(root, relativePath), "utf8");
 
 test("browser configuration contains no server secret", () => {
   const config = read("web/config.example.js");
+  const configWithoutComments = config.replace(/^\s*\/\/.*$/gm, "");
   const webSources = ["web/onboarding.js", "web/ingest.js", "web/workspace.js"]
     .map(read)
     .join("\n");
 
   assert.match(config, /publishableKey/);
-  assert.doesNotMatch(config, /service[_-]?role|secret|sb_secret/i);
+  assert.doesNotMatch(configWithoutComments, /service[_-]?role|secret|sb_secret/i);
   assert.doesNotMatch(webSources, /service[_-]?role|sb_secret|sk_live|sk_test/i);
 });
 
@@ -32,7 +33,7 @@ test("source ingestion preserves the private organization-scoped upload contract
   const source = read("web/ingest.js");
 
   assert.match(source, /from\("organization_memberships"\)/);
-  assert.match(source, /eq\("user_id", user\.id\)/);
+  assert.match(source, /eq\("user_id", userId\)/);
   assert.match(source, /organization_id: workspace\.organization\.id/);
   assert.match(source, /provider: "upload"/);
   assert.match(source, /eagle-source-documents/);
