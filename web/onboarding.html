@@ -11,12 +11,13 @@
       label { color: var(--muted); font-size: 12px; font-weight: 750; }
       input { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 12px; color: var(--ink); background: #fff; }
       .form-stack button { width: fit-content; }
-      .auth-view.hidden { display: none; }
+      .auth-view.hidden, .next-actions.hidden { display: none; }
       .setup-note { padding: 12px; color: #755821; background: #fffaf0; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
       .status { min-height: 22px; margin-top: 18px; color: var(--muted); font-size: 13px; }
       .status.error { color: #9b4c4c; }
       .status.success { color: var(--green); }
       .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #f1f8f3; border-radius: 10px; font-size: 13px; }
+      .next-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; align-items: center; }
     </style>
   </head>
   <body>
@@ -58,6 +59,10 @@
             <input id="org-slug" name="org_slug" required minlength="3" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="eagle-academy-alumni" />
             <button class="primary" type="submit">Create workspace <span>→</span></button>
           </form>
+          <div id="next-actions" class="next-actions hidden">
+            <a class="primary" href="./workspace.html">Open workspace <span>→</span></a>
+            <a class="text-button" href="./ingest.html">Upload sources</a>
+          </div>
         </div>
 
         <p id="status" class="status" role="status"></p>
