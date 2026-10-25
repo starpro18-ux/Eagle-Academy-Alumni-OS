@@ -10,7 +10,7 @@ const read = (relativePath) => readFileSync(join(root, relativePath), "utf8");
 test("browser configuration contains no server secret", () => {
   const config = read("web/config.example.js");
   const configWithoutComments = config.replace(/^\s*\/\/.*$/gm, "");
-  const webSources = ["web/onboarding.js", "web/ingest.js", "web/workspace.js", "web/review.js"]
+  const webSources = ["web/onboarding.js", "web/ingest.js", "web/workspace.js", "web/review.js", "web/integrations.js"]
     .map(read)
     .join("\n");
 
@@ -20,7 +20,7 @@ test("browser configuration contains no server secret", () => {
 });
 
 test("protected pages load runtime config before their modules", () => {
-  for (const page of ["web/onboarding.html", "web/ingest.html", "web/workspace.html", "web/review.html"]) {
+  for (const page of ["web/onboarding.html", "web/ingest.html", "web/workspace.html", "web/review.html", "web/integrations.html"]) {
     const html = read(page);
     const configIndex = html.indexOf('src="./config.js"');
     const moduleIndex = html.indexOf('type="module"');
@@ -57,5 +57,15 @@ test("review queue is read-only and organization-scoped", () => {
   assert.match(source, /from\("commitments"\)/);
   assert.match(source, /from\("events"\)/);
   assert.match(source, /from\("source_documents"\)/);
+  assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
+});
+
+
+test("integrations status is read-only and organization-scoped", () => {
+  const source = read("web/integrations.js");
+
+  assert.match(source, /eq\("organization_id", organizationId\)/);
+  assert.match(source, /from\("connector_accounts"\)/);
+  assert.match(source, /from\("sync_runs"\)/);
   assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
 });
