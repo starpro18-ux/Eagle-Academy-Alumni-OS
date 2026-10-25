@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eagle Academy · Source ingestion</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .ingest-card { max-width: 760px; margin: 48px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+      .form-stack { display: grid; gap: 12px; margin-top: 24px; }
+      label { color: var(--muted); font-size: 12px; font-weight: 750; }
+      input[type="file"] { width: 100%; border: 1px dashed var(--line); border-radius: 9px; padding: 16px; color: var(--ink); background: #fff; }
+      .form-stack button { width: fit-content; }
+      .auth-view.hidden { display: none; }
+      .setup-note { padding: 12px; color: #755821; background: #fffaf0; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
+      .status { min-height: 22px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+      .status.error { color: #9b4c4c; }
+      .status.success { color: var(--green); }
+      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #f1f8f3; border-radius: 10px; font-size: 13px; }
+      .source-list { display: grid; gap: 10px; margin-top: 28px; padding: 0; list-style: none; }
+      .source-item { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; }
+      .source-title { font-weight: 700; overflow-wrap: anywhere; }
+      .source-meta { color: var(--muted); font-size: 12px; text-align: right; }
+      .empty { color: var(--muted); font-size: 13px; }
+      @media (max-width: 640px) { .source-item { display: grid; } .source-meta { text-align: left; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">EAGLE ACADEMY ALUMNI ASSOCIATION</p>
+          <h1>Source ingestion</h1>
+          <p class="lede">Upload source documents into the private evidence vault. Extraction stays pending until the processing worker is connected.</p>
+        </div>
+        <div class="mode-pill"><span class="pulse"></span> Protected</div>
+      </header>
+
+      <section class="ingest-card" aria-live="polite">
+        <div id="setup-view" class="auth-view">
+          <p class="setup-note">This page needs a local <code>config.js</code> copied from <code>config.example.js</code>. Only use a publishable key in browser code.</p>
+        </div>
+
+        <div id="sign-in-view" class="auth-view hidden">
+          <p class="eyebrow">AUTHENTICATION</p>
+          <h2>Sign in to continue</h2>
+          <p class="subtle">Use the same magic-link flow as onboarding. Membership is checked by the database before any source is listed or uploaded.</p>
+          <form id="sign-in-form" class="form-stack">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="owner@example.org" />
+            <button class="primary" type="submit">Send magic link <span>→</span></button>
+          </form>
+        </div>
+
+        <div id="app-view" class="auth-view hidden">
+          <div class="signed-in"><span>Signed in as <strong id="signed-in-email"></strong><br /><small id="organization-name"></small></span><button id="sign-out" class="text-button" type="button">Sign out</button></div>
+          <p class="eyebrow" style="margin-top: 28px;">PRIVATE SOURCE VAULT</p>
+          <h2>Add a source document</h2>
+          <p class="subtle">PDF, Word, Excel, CSV, and plain-text files up to 50 MB. Files are stored under an organization-scoped path and remain private.</p>
+          <form id="upload-form" class="form-stack">
+            <label for="source-file">Source file</label>
+            <input id="source-file" name="source_file" type="file" accept=".pdf,.docx,.xlsx,.xls,.txt,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/csv" required />
+            <button class="primary" type="submit">Upload source <span>→</span></button>
+          </form>
+          <div id="source-list" class="source-list"></div>
+        </div>
+
+        <p id="status" class="status" role="status"></p>
+      </section>
+    </main>
+    <script src="./config.js"></script>
+    <script type="module" src="./ingest.js"></script>
+  </body>
+</html>
