@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eagle Academy Alumni OS</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">EAGLE ACADEMY ALUMNI ASSOCIATION</p>
+          <h1>Operating center</h1>
+          <p class="lede">Turn conversations into accountable work, with evidence at every step.</p>
+        </div>
+        <div class="mode-pill"><span class="pulse"></span> Human review mode</div>
+      </header>
+
+      <section class="notice">
+        <strong>Foundation workspace</strong>
+        <span>Demo data is active. No messages, member changes, or budget actions happen without approval.</span>
+      </section>
+
+      <nav class="tabs" aria-label="Workspace sections">
+        <button class="tab active" data-view="overview">Overview</button>
+        <button class="tab" data-view="review">Review queue <span class="count" id="review-count">3</span></button>
+        <button class="tab" data-view="events">Events</button>
+        <button class="tab" data-view="sources">Sources</button>
+      </nav>
+
+      <section id="view-overview" class="view">
+        <div class="hero-grid">
+          <div class="hero-card">
+            <p class="eyebrow">THIS WEEK</p>
+            <h2>Make the next step obvious.</h2>
+            <p>Three recommendations are ready for a person to review. Two commitments need owners before the next leadership meeting.</p>
+            <button class="primary" data-view-target="review">Open review queue <span>→</span></button>
+          </div>
+          <div class="trust-card">
+            <div class="trust-ring"><span>0</span><small>auto actions</small></div>
+            <div>
+              <p class="eyebrow">AUTONOMY LEVEL</p>
+              <h3>Draft & recommend</h3>
+              <p>Every action is reversible and human-approved.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric"><span>Open commitments</span><strong id="commitment-metric">7</strong><small>2 need an owner</small></article>
+          <article class="metric"><span>Events in planning</span><strong>3</strong><small>Father Figures is next</small></article>
+          <article class="metric"><span>Objectives measured</span><strong>0%</strong><small>Set targets before execution</small></article>
+          <article class="metric"><span>Source documents</span><strong>4</strong><small>Seed corpus awaiting ingestion</small></article>
+        </div>
+
+        <div class="section-head">
+          <div><p class="eyebrow">WORKFLOW</p><h2>What needs attention</h2></div>
+          <span class="muted">Updated just now</span>
+        </div>
+        <div class="attention-grid">
+          <article class="attention-card accent-blue">
+            <span class="card-icon">✦</span><div><h3>Review recommendations</h3><p>Confirm whether the extracted commitments match the meeting record.</p><button class="text-button" data-view-target="review">Review now →</button></div>
+          </article>
+          <article class="attention-card accent-gold">
+            <span class="card-icon">◷</span><div><h3>Complete the event brief</h3><p>Father Figures needs a budget, owners, and success measures.</p><button class="text-button" data-view-target="events">Open event →</button></div>
+          </article>
+          <article class="attention-card accent-green">
+            <span class="card-icon">⌁</span><div><h3>Connect a source</h3><p>Google Drive and Zoom imports will use the same evidence ledger.</p><button class="text-button" data-view-target="sources">View sources →</button></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="view-review" class="view hidden">
+        <div class="section-head"><div><p class="eyebrow">HUMAN REVIEW</p><h2>Recommendation queue</h2><p class="subtle">Nothing moves forward until a person approves it.</p></div><span class="status-chip">Evidence required</span></div>
+        <div id="review-list" class="review-list"></div>
+        <div id="empty-review" class="empty hidden"><strong>Queue clear.</strong><span>New recommendations will appear here with their sources.</span></div>
+      </section>
+
+      <section id="view-events" class="view hidden">
+        <div class="section-head"><div><p class="eyebrow">EVENTS</p><h2>Planning workspace</h2><p class="subtle">Objectives first. Debrief always.</p></div><button class="secondary">+ New event</button></div>
+        <article class="event-panel">
+          <div class="event-title"><div><span class="event-status">PLANNING</span><h3>Father Figures Event</h3><p>October · Brotherhood & Opportunity</p></div><div class="event-progress"><strong>42%</strong><span>brief complete</span></div></div>
+          <div class="progress"><span style="width:42%"></span></div>
+          <div class="event-columns">
+            <div><p class="eyebrow">OBJECTIVES</p><ul class="check-list"><li class="done">Define audience and purpose</li><li class="done">Identify committee lead</li><li>Submit budget and event brief</li><li>Set attendance and engagement targets</li></ul></div>
+            <div><p class="eyebrow">OPEN QUESTIONS</p><ul class="question-list"><li>Who owns the program run-of-show?</li><li>What foundation support is required?</li><li>How will success be measured?</li></ul></div>
+          </div>
+        </article>
+        <div class="section-head compact"><div><p class="eyebrow">UPCOMING</p><h2>Engagement calendar</h2></div></div>
+        <div class="calendar-list"><div><span class="date-box">SEP<span>10</span></span><div><strong>First Day of School Activation</strong><small>Service · Needs owner confirmation</small></div><span class="tag">Draft</span></div><div><span class="date-box">OCT<span>—</span></span><div><strong>Father Figures Event</strong><small>Brotherhood · Brief in progress</small></div><span class="tag gold">Planning</span></div><div><span class="date-box">TBD<span>—</span></span><div><strong>Career Day</strong><small>Opportunity · Date to be rescheduled</small></div><span class="tag">Needs date</span></div></div>
+      </section>
+
+      <section id="view-sources" class="view hidden">
+        <div class="section-head"><div><p class="eyebrow">EVIDENCE LIBRARY</p><h2>Source documents</h2><p class="subtle">Original files stay immutable. New versions create new evidence.</p></div><button class="secondary">Connect Google Drive</button></div>
+        <div class="connector-row"><div class="connector-logo drive">G</div><div><strong>Google Drive</strong><small>Not connected · imports will be review-first</small></div><button class="text-button">Connect</button></div>
+        <div class="connector-row"><div class="connector-logo zoom">Z</div><div><strong>Zoom</strong><small>Not connected · transcripts become proposed decisions</small></div><button class="text-button">Connect</button></div>
+        <div class="source-list" id="source-list"></div>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
