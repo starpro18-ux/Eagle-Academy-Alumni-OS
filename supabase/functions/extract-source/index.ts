@@ -65,16 +65,16 @@ async function extractDocx(bytes) {
 async function extractXlsx(bytes) {
   const zip = await JSZip.loadAsync(bytes);
   const sharedEntry = zip.file("xl/sharedStrings.xml");
-  const sharedStrings = sharedEntry ? (await sharedEntry.async("text")).match(/<t[^>]*>([\\s\\S]*?)<\\/t>/g)?.map((value) => decodeXml(value.replace(/<[^>]+>/g, ""))) ?? [] : [];
+  const sharedStrings = sharedEntry ? (await sharedEntry.async("text")).match(/<t[^>]*>([\s\S]*?)<\/t>/g)?.map((value) => decodeXml(value.replace(/<[^>]+>/g, ""))) ?? [] : [];
   const sheet = zip.file("xl/worksheets/sheet1.xml");
   if (!sheet) throw new Error("The spreadsheet has no first worksheet.");
   const xml = await sheet.async("text");
   const rows = [];
-  for (const row of xml.matchAll(/<row[^>]*>([\\s\\S]*?)<\\/row>/g)) {
+  for (const row of xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)) {
     const cells = [];
-    for (const cell of row[1].matchAll(/<c([^>]*)>([\\s\\S]*?)<\\/c>/g)) {
+    for (const cell of row[1].matchAll(/<c([^>]*)>([\s\S]*?)<\/c>/g)) {
       const attributes = cell[1];
-      const value = cell[2].match(/<v[^>]*>([\\s\\S]*?)<\\/v>/)?.[1] ?? cell[2].match(/<t[^>]*>([\\s\\S]*?)<\\/t>/)?.[1] ?? "";
+      const value = cell[2].match(/<v[^>]*>([\s\S]*?)<\/v>/)?.[1] ?? cell[2].match(/<t[^>]*>([\s\S]*?)<\/t>/)?.[1] ?? "";
       const isShared = /t="s"/.test(attributes);
       cells.push(decodeXml(isShared ? (sharedStrings[Number(value)] ?? "") : value));
     }
