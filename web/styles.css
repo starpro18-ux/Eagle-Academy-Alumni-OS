@@ -136,9 +136,12 @@ a.tab { text-decoration: none; display: inline-block; }
   text-decoration: none;
 }
 .brand-lockup img {
-  width: 42px;
-  height: 42px;
-  filter: drop-shadow(0 5px 8px rgba(25, 50, 74, .14));
+  width: 52px;
+  height: 52px;
+  padding: 2px;
+  border-radius: 50%;
+  background: #fff8e7;
+  filter: drop-shadow(0 6px 10px rgba(25, 50, 74, .16));
 }
 .brand-lockup span {
   display: grid;
