@@ -126,3 +126,70 @@ a.tab { text-decoration: none; display: inline-block; }
   .metric small { grid-column: 1; }
   .tabs { gap: 15px; overflow-x: auto; }
 }
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: var(--navy);
+  text-decoration: none;
+}
+.brand-lockup img {
+  width: 42px;
+  height: 42px;
+  filter: drop-shadow(0 5px 8px rgba(25, 50, 74, .14));
+}
+.brand-lockup span {
+  display: grid;
+  gap: 2px;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: -.01em;
+}
+.brand-lockup small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.topbar {
+  position: relative;
+}
+.topbar::after {
+  content: "";
+  position: absolute;
+  top: -42px;
+  right: -28px;
+  width: 210px;
+  height: 150px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(226, 180, 81, .18), transparent 68%);
+}
+.primary {
+  color: var(--navy);
+  background: linear-gradient(135deg, #f7d98b, #d7a33f);
+  box-shadow: 0 8px 18px rgba(198, 148, 52, .18);
+}
+.primary:hover {
+  background: linear-gradient(135deg, #ffe4a2, #e2b451);
+}
+.hero-card, .hero-panel {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(226, 180, 81, .22), transparent 30%),
+    var(--navy);
+}
+.mode-pill {
+  background: #fff8e7;
+  border-color: #f1dfb3;
+  color: #8f6a24;
+}
+.pulse { background: var(--gold); }
+.tabs {
+  border-bottom-color: #d7e0e6;
+}
+.tab:hover {
+  color: var(--blue);
+}
