@@ -205,3 +205,17 @@ test("accountability intelligence is explainable and status changes are governed
   assert.match(worker, /commitment\.status_changed/);
   assert.match(worker, /completed_at/);
 });
+
+
+test("service outcome intelligence is evidence-aware and contributor-gated", () => {
+  const ui = read("web/events.js");
+  const worker = read("supabase/functions/record-event-outcome/index.ts");
+  assert.match(ui, /renderOutcomeForm/);
+  assert.match(ui, /outcomeSignal/);
+  assert.match(ui, /functions\.invoke\("record-event-outcome"/);
+  assert.match(ui, /from\("evidence"\)/);
+  assert.match(worker, /auth\.getUser\(\)/);
+  assert.match(worker, /CONTRIBUTOR_ROLES/);
+  assert.match(worker, /source_evidence_id/);
+  assert.match(worker, /event\.outcome_recorded/);
+});
