@@ -10,6 +10,13 @@ const status = document.querySelector("#status");
 const form = document.querySelector("#sign-in-form");
 const sourceList = document.querySelector("#source-list");
 const commitmentList = document.querySelector("#commitment-list");
+const pulseAttention = document.querySelector("#pulse-attention .pulse-card-value");
+const pulseDecisions = document.querySelector("#pulse-decisions .pulse-card-value");
+const pulseImpact = document.querySelector("#pulse-impact .pulse-card-value");
+const pulseEvidence = document.querySelector("#pulse-evidence .pulse-card-value");
+const pulseNextTitle = document.querySelector("#pulse-next-title");
+const pulseNextCopy = document.querySelector("#pulse-next-copy");
+const pulseNextLink = document.querySelector("#pulse-next-link");
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -89,6 +96,67 @@ function renderList(element, items, emptyMessage, getTitle, getMeta) {
   }
 }
 
+async function leadershipPulse(supabase, organizationId) {
+  const [commitments, recommendations, objectives, outcomes, sources] = await Promise.all([
+    supabase.from("commitments").select("status, due_date, owner_id").eq("organization_id", organizationId).limit(200),
+    supabase.from("recommendations").select("status").eq("organization_id", organizationId).limit(200),
+    supabase.from("event_objectives").select("id").eq("organization_id", organizationId).limit(200),
+    supabase.from("event_outcomes").select("objective_id").eq("organization_id", organizationId).limit(500),
+    supabase.from("source_documents").select("extraction_status").eq("organization_id", organizationId).limit(200),
+  ]);
+  for (const result of [commitments, recommendations, objectives, outcomes, sources]) {
+    if (result.error) throw result.error;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const openCommitments = commitments.data ?? [];
+  const attention = openCommitments.filter((item) => {
+    if (["completed", "cancelled"].includes(item.status)) return false;
+    if (item.status === "blocked" || !item.owner_id || !item.due_date) return true;
+    return new Date(`${item.due_date}T00:00:00`) < today;
+  }).length;
+  const decisionQueue = (recommendations.data ?? []).filter((item) => ["draft", "proposed"].includes(item.status)).length;
+  const outcomeIds = new Set((outcomes.data ?? []).map((item) => item.objective_id));
+  const impactGaps = (objectives.data ?? []).filter((item) => !outcomeIds.has(item.id)).length;
+  const evidenceGaps = (sources.data ?? []).filter((item) => ["pending", "failed"].includes(item.extraction_status)).length;
+  return { attention, decisionQueue, impactGaps, evidenceGaps };
+}
+
+function renderLeadershipPulse(pulse) {
+  pulseAttention.textContent = pulse.attention;
+  pulseDecisions.textContent = pulse.decisionQueue;
+  pulseImpact.textContent = pulse.impactGaps;
+  pulseEvidence.textContent = pulse.evidenceGaps;
+
+  if (pulse.evidenceGaps) {
+    pulseNextTitle.textContent = "Move the evidence pipeline";
+    pulseNextCopy.textContent = `${pulse.evidenceGaps} source${pulse.evidenceGaps === 1 ? "" : "s"} need extraction or recovery before decisions can be trusted.`;
+    pulseNextLink.href = "./ingest.html";
+    pulseNextLink.textContent = "Open sources →";
+  } else if (pulse.attention) {
+    pulseNextTitle.textContent = "Restore follow-through";
+    pulseNextCopy.textContent = `${pulse.attention} open commitment${pulse.attention === 1 ? "" : "s"} need ownership, timing, or intervention.`;
+    pulseNextLink.href = "./operations.html";
+    pulseNextLink.textContent = "Open commitments →";
+  } else if (pulse.decisionQueue) {
+    pulseNextTitle.textContent = "Review the decision queue";
+    pulseNextCopy.textContent = `${pulse.decisionQueue} recommendation${pulse.decisionQueue === 1 ? "" : "s"} are waiting for human judgment.`;
+    pulseNextLink.href = "./review.html";
+    pulseNextLink.textContent = "Open review →";
+  } else if (pulse.impactGaps) {
+    pulseNextTitle.textContent = "Close the impact loop";
+    pulseNextCopy.textContent = `${pulse.impactGaps} objective${pulse.impactGaps === 1 ? "" : "s"} still need an observed outcome.`;
+    pulseNextLink.href = "./events.html";
+    pulseNextLink.textContent = "Record outcomes →";
+  } else {
+    pulseNextTitle.textContent = "The operating loop is clear";
+    pulseNextCopy.textContent = "Evidence, decisions, follow-through, and impact are all accounted for.";
+    pulseNextLink.href = "./workspace.html";
+    pulseNextLink.textContent = "Open workspace →";
+  }
+}
+
 function renderGuidance(stats) {
   const action = document.querySelector("#next-action");
   const title = document.querySelector("#next-action-title");
@@ -136,6 +204,7 @@ async function render(supabase, session) {
       count(supabase, "events", id),
       count(supabase, "recommendations", id),
       activity(supabase, id),
+      leadershipPulse(supabase, id),
     ]);
     const stats = { sources, pending, evidence, commitments, events, recommendations };
     document.querySelector("#signed-in-email").textContent = session.user.email || "authenticated user";
@@ -143,6 +212,7 @@ async function render(supabase, session) {
     document.querySelector("#hero-title").textContent = `Your command center for ${current.organization.name}`;
     [["source-count", sources], ["evidence-count", evidence], ["commitment-count", commitments], ["event-count", events], ["recommendation-count", recommendations]].forEach(([id, value]) => { document.querySelector(`#${id}`).textContent = value; });
     renderGuidance(stats);
+    renderLeadershipPulse(pulse);
     renderList(sourceList, recent.sources, "No sources yet. Add the first piece of trusted material.", (item) => item.title, (item) => `${item.extraction_status} · ${date(item.created_at)}`);
     renderList(commitmentList, recent.commitments, "No commitments yet. Capture what someone agreed to do.", (item) => item.title, (item) => `${item.status} · due ${date(item.due_date)}`);
     show(views.app);
