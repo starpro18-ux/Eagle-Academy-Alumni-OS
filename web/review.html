@@ -35,6 +35,8 @@
       .builder-controls select { min-width: min(100%, 360px); flex: 1; }
       .builder-controls button { white-space: nowrap; }
       .control-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .decision-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+      .decision-actions button { margin-top: 0; }
       @media (max-width: 780px) { .review-grid { grid-template-columns: 1fr; } .review-section.wide { grid-column: auto; } }
     </style>
   </head>
@@ -98,12 +100,13 @@
           </div>
           <p class="eyebrow">HUMAN CONTROLLED</p>
           <h2>Review queue</h2>
-          <p class="subtle">Recommendations are proposals. Commitments and events are context. No approval or operational action is performed from this page yet.</p>
+          <p class="subtle">Recommendations are proposals. Leaders can approve, reject, or record corrections. Approval records governance; it does not execute an operational action.</p>
 
           <div class="review-grid">
             <section class="review-section wide">
               <p class="eyebrow">RECOMMENDATIONS</p>
               <h3>Proposed decisions</h3>
+              <p class="control-note">Evidence counts show how many source fragments support each proposal. Corrections become labeled learning data for future agent quality.</p>
               <div class="recommendation-builder">
                 <label for="recommend-source-select">Generate from extracted evidence</label>
                 <div class="builder-controls">
