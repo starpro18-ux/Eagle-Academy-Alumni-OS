@@ -196,10 +196,9 @@ async function loadSources(supabase, organizationId) {
           preview.textContent = error.message || "Evidence could not be loaded.";
         }
       });
-      item.append(details);
+      item.append(title, controls, details);
     }
-
-    item.append(title, controls);
+  }
     sourceList.append(item);
   }
 }
