@@ -219,3 +219,16 @@ test("service outcome intelligence is evidence-aware and contributor-gated", () 
   assert.match(worker, /source_evidence_id/);
   assert.match(worker, /event\.outcome_recorded/);
 });
+
+
+test("command center exposes explainable leadership intelligence", () => {
+  const source = read("web/command-center.js");
+  assert.match(source, /leadershipPulse/);
+  assert.match(source, /renderLeadershipPulse/);
+  assert.match(source, /from\("commitments"\)/);
+  assert.match(source, /from\("recommendations"\)/);
+  assert.match(source, /from\("event_objectives"\)/);
+  assert.match(source, /from\("event_outcomes"\)/);
+  assert.match(source, /from\("source_documents"\)/);
+  assert.doesNotMatch(source, /.insert\(|.update\(|.delete\(/);
+});
