@@ -29,6 +29,12 @@
       .tag.review { background: #f3ede2; color: #6b5a3e; }
       .tag.risk { background: #f4ebe6; color: #8c4242; }
       .empty { color: var(--muted); font-size: 13px; line-height: 1.5; }
+      .recommendation-builder { margin-top: 18px; padding: 16px; border: 1px solid var(--line); background: var(--white); }
+      .recommendation-builder label { display: block; color: var(--ink); font-size: 12px; font-weight: 650; }
+      .builder-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+      .builder-controls select { min-width: min(100%, 360px); flex: 1; }
+      .builder-controls button { white-space: nowrap; }
+      .control-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
       @media (max-width: 780px) { .review-grid { grid-template-columns: 1fr; } .review-section.wide { grid-column: auto; } }
     </style>
   </head>
@@ -56,6 +62,17 @@
   <a class="tab" href="./integrations.html">Integrations</a>
   <a class="tab" href="./index.html">Dashboard</a>
 </nav>
+
+      <div class="mission-bar" aria-label="EAAA mission">
+  <div>
+    <span class="mission-kicker">THE EAAA STANDARD</span>
+    <strong>Brotherhood. Service. Access to Opportunity.</strong>
+    <div class="pillar-list" aria-label="EAAA pillars">
+      <span>Connection</span><span>Accountability</span><span>Economic mobility</span>
+    </div>
+  </div>
+  <p>Strengthening the connection between Eagle brothers, the communities that shaped us, and the pathways that help alumni and students thrive.</p>
+</div>
 
       <section class="review-card" aria-live="polite">
         <div id="setup-view" class="auth-view">
@@ -87,6 +104,16 @@
             <section class="review-section wide">
               <p class="eyebrow">RECOMMENDATIONS</p>
               <h3>Proposed decisions</h3>
+              <div class="recommendation-builder">
+                <label for="recommend-source-select">Generate from extracted evidence</label>
+                <div class="builder-controls">
+                  <select id="recommend-source-select" aria-label="Source for recommendation">
+                    <option value="">Choose a completed source</option>
+                  </select>
+                  <button id="generate-recommendation" class="secondary" type="button" disabled>Generate recommendation</button>
+                </div>
+                <p id="recommendation-hint" class="control-note">Choose an extracted source. Every proposal stays marked proposed and carries source citations for human review.</p>
+              </div>
               <ul id="recommendation-list" class="review-list"></ul>
             </section>
             <section class="review-section">

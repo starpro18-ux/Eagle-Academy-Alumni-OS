@@ -107,6 +107,40 @@ test("command center is organization-scoped and browser-write free", () => {
 });
 
 
+test("EAAA mission language is present across platform surfaces", () => {
+  for (const page of ["web/onboarding.html", "web/ingest.html", "web/workspace.html", "web/review.html", "web/operations.html", "web/events.html", "web/integrations.html", "web/index.html", "web/app.html"]) {
+    const html = read(page);
+    assert.match(html, /Brotherhood\. Service\. Access to Opportunity\./);
+    assert.match(html, /mission-bar/);
+  }
+});
+
+test("review queue invokes only the protected recommendation worker", () => {
+  const source = read("web/review.js");
+  assert.match(source, /functions\.invoke\("recommend-source"/);
+  assert.doesNotMatch(source, /OPENAI_API_KEY|api\.openai\.com|sk-[A-Za-z0-9]/);
+});
+
+test("source extraction supports PDF, Word, and both Excel formats", () => {
+  const source = read("supabase/functions/extract-source/index.ts");
+  assert.match(source, /application\/pdf/);
+  assert.match(source, /wordprocessingml\.document/);
+  assert.match(source, /application\/vnd\.ms-excel/);
+  assert.match(source, /pdfjsLib/);
+  assert.match(source, /XLSX/);
+  assert.match(source, /MAX_EXTRACTABLE_BYTES = 25 \* 1024 \* 1024/);
+});
+
+test("recommendation worker is authenticated, cited, and proposed-only", () => {
+  const source = read("supabase/functions/recommend-source/index.ts");
+  assert.match(source, /auth\.getUser\(\)/);
+  assert.match(source, /from\("organization_memberships"\)/);
+  assert.match(source, /OPENAI_API_KEY/);
+  assert.match(source, /from\("recommendations"\)/);
+  assert.match(source, /status: "proposed"/);
+  assert.match(source, /from\("recommendation_citations"\)/);
+});
+
 test("source extraction stays authenticated and organization-scoped", () => {
   const source = read("supabase/functions/extract-source/index.ts");
 

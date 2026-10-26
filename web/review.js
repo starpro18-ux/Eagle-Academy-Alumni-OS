@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 
 const config = globalThis.EAGLE_SUPABASE_CONFIG ?? {};
+const CONTRIBUTOR_ROLES = new Set(["owner", "leader", "committee_lead", "contributor"]);
 const setupView = document.querySelector("#setup-view");
 const signInView = document.querySelector("#sign-in-view");
 const appView = document.querySelector("#app-view");
@@ -12,6 +13,10 @@ const recommendationList = document.querySelector("#recommendation-list");
 const commitmentList = document.querySelector("#commitment-list");
 const eventList = document.querySelector("#event-list");
 const sourceList = document.querySelector("#source-list");
+const recommendationSourceSelect = document.querySelector("#recommend-source-select");
+const generateRecommendationButton = document.querySelector("#generate-recommendation");
+const recommendationHint = document.querySelector("#recommendation-hint");
+let canRecommend = false;
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -181,6 +186,26 @@ function renderEvents(items) {
   }
 }
 
+function renderRecommendationSources(items) {
+  const completed = items.filter((item) => item.extraction_status === "complete");
+  recommendationSourceSelect.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = completed.length ? "Choose a completed source" : "Extract a source first";
+  recommendationSourceSelect.append(placeholder);
+  for (const item of completed) {
+    const option = document.createElement("option");
+    option.value = item.id;
+    option.textContent = item.title;
+    recommendationSourceSelect.append(option);
+  }
+  recommendationSourceSelect.disabled = !canRecommend || !completed.length;
+  generateRecommendationButton.disabled = !canRecommend || !completed.length || !recommendationSourceSelect.value;
+  recommendationHint.textContent = canRecommend
+    ? (completed.length ? "Choose an extracted source. Every proposal stays marked proposed and carries source citations for human review." : "Extract a PDF, Word, Excel, CSV, or text source first.")
+    : "Your current role is read-only. Ask an owner, leader, committee lead, or contributor to generate a proposal.";
+}
+
 function renderSources(items) {
   sourceList.replaceChildren();
   if (!items.length) {
@@ -212,10 +237,12 @@ async function renderSession(supabase, session) {
   try {
     setStatus("Loading review queue…");
     const workspace = await loadWorkspace(supabase, session.user.id);
+    canRecommend = CONTRIBUTOR_ROLES.has(workspace.membership.role);
     const data = await loadData(supabase, workspace.organization.id);
     signedInEmail.textContent = session.user.email || "authenticated user";
     organizationName.textContent = `${workspace.organization.name} · ${workspace.membership.role}`;
     renderRecommendations(data.recommendations);
+    renderRecommendationSources(data.sources);
     renderCommitments(data.commitments);
     renderEvents(data.events);
     renderSources(data.sources);
@@ -251,8 +278,32 @@ async function start() {
 
   document.querySelector("#sign-out").addEventListener("click", async () => {
     await supabase.auth.signOut();
+    canRecommend = false;
     show(signInView);
     setStatus("Signed out.");
+  });
+
+  recommendationSourceSelect.addEventListener("change", () => {
+    generateRecommendationButton.disabled = !canRecommend || !recommendationSourceSelect.value;
+  });
+
+  generateRecommendationButton.addEventListener("click", async () => {
+    const sourceDocumentId = recommendationSourceSelect.value;
+    if (!sourceDocumentId) return;
+    generateRecommendationButton.disabled = true;
+    setStatus("Generating a cited recommendation…");
+    const { data, error } = await supabase.functions.invoke("recommend-source", {
+      body: { source_document_id: sourceDocumentId },
+    });
+    if (error || data?.error) {
+      setStatus(error?.message || data?.error || "Recommendation generation failed.", "error");
+      generateRecommendationButton.disabled = false;
+      return;
+    }
+    const refreshed = await loadData(supabase, (await loadWorkspace(supabase, (await supabase.auth.getUser()).data.user.id)).organization.id);
+    renderRecommendations(refreshed.recommendations);
+    renderRecommendationSources(refreshed.sources);
+    setStatus("Recommendation created as proposed and added to the human review queue.", "success");
   });
 
   supabase.auth.onAuthStateChange((_event, session) => {

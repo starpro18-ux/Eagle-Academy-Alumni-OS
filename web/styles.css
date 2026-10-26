@@ -253,3 +253,55 @@ h3 { font-weight: 600; letter-spacing: -.005em; }
 input, select, textarea { font: inherit; border-radius: 0 !important; border: 1px solid var(--line); background: var(--white); }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink); }
 ::selection { background: #e6dccb; }
+
+.mission-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, .95fr);
+  gap: 24px;
+  align-items: center;
+  margin: 20px 0 30px;
+  padding: 18px 20px;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(110deg, rgba(255,255,255,.58), rgba(232,225,211,.42));
+}
+.mission-bar strong, .mission-bar p { margin: 0; }
+.mission-bar strong {
+  display: block;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: .01em;
+}
+.mission-kicker {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+}
+.mission-bar p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.pillar-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pillar-list span {
+  padding: 5px 8px;
+  border: 1px solid rgba(168,135,90,.38);
+  color: var(--ink);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+@media (max-width: 780px) {
+  .mission-bar { grid-template-columns: 1fr; gap: 12px; }
+}
