@@ -197,8 +197,9 @@ async function loadSources(supabase, organizationId) {
         }
       });
       item.append(title, controls, details);
+    } else {
+      item.append(title, controls);
     }
-  }
     sourceList.append(item);
   }
 }
