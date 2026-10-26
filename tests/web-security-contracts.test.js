@@ -29,6 +29,23 @@ test("protected pages load runtime config before their modules", () => {
   }
 });
 
+test("EAAA web design system preserves quiet luxury accessibility constraints", () => {
+  const css = read("web/styles.css");
+  assert.doesNotMatch(css, /gradient/);
+  assert.match(css, /focus-visible/);
+  assert.match(css, /prefers-reduced-motion/);
+  assert.match(css, /--gold: #a8875a/);
+  assert.match(css, /--navy: #1c1b19/);
+});
+
+test("production navigation labels the demo route honestly", () => {
+  for (const page of ["web/index.html", "web/onboarding.html", "web/workspace.html", "web/ingest.html", "web/review.html", "web/operations.html", "web/events.html", "web/integrations.html"]) {
+    assert.doesNotMatch(read(page), /href="\.\/index\.html">Dashboard/);
+  }
+  assert.match(read("web/ingest.html"), /Supported files can be extracted/);
+  assert.match(read("web/review.html"), /Expand the cited claims/);
+});
+
 test("source ingestion preserves the private organization-scoped upload contract", () => {
   const source = read("web/ingest.js");
 

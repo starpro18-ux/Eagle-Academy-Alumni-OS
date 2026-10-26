@@ -170,19 +170,18 @@ a.tab { text-decoration: none; display: inline-block; }
   width: 210px;
   height: 150px;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(226, 180, 81, .18), transparent 68%);
+  background: transparent;
 }
 .primary {
   color: var(--navy);
-  background: linear-gradient(135deg, #f7d98b, #d7a33f);
+  background: #d7a33f;
   box-shadow: 0 8px 18px rgba(198, 148, 52, .18);
 }
 .primary:hover {
-  background: linear-gradient(135deg, #ffe4a2, #e2b451);
+  background: #e2b451;
 }
 .hero-card, .hero-panel {
   background:
-    radial-gradient(circle at 88% 12%, rgba(226, 180, 81, .22), transparent 30%),
     var(--navy);
 }
 .mode-pill {
@@ -263,7 +262,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--i
   padding: 18px 20px;
   border-top: 1px solid var(--gold);
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(110deg, rgba(255,255,255,.58), rgba(232,225,211,.42));
+  background: rgba(255,255,255,.58);
 }
 .mission-bar strong, .mission-bar p { margin: 0; }
 .mission-bar strong {
@@ -304,4 +303,59 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--i
 }
 @media (max-width: 780px) {
   .mission-bar { grid-template-columns: 1fr; gap: 12px; }
+}
+
+
+/* ===== EAAA institutional interaction layer ===== */
+html { scroll-behavior: smooth; }
+body { min-width: 320px; line-height: 1.5; }
+a, button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+a, button { touch-action: manipulation; }
+button:disabled { cursor: wait; opacity: .58; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.tabs {
+  align-items: flex-end;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab { min-height: 44px; white-space: nowrap; }
+.status { min-height: 1.4em; margin: 18px 0 0; color: var(--muted); font-size: 13px; }
+.status.success { color: var(--green); }
+.status.error { color: #8f4b4b; }
+.mission-bar { background: rgba(255,255,255,.58); }
+.mode-pill { align-self: flex-start; }
+@media (max-width: 780px) {
+  .shell { padding-left: 18px; padding-right: 18px; }
+  .topbar { gap: 12px; }
+  .topbar h1 { max-width: 13ch; }
+  .brand-lockup img { width: 46px; height: 46px; }
+  .mission-bar { margin-top: 16px; }
+  .hero-card, .trust-card, .event-panel, .review-card { padding: 22px; }
+  .trust-card { align-items: flex-start; }
+  .trust-ring { width: 82px; height: 82px; border-width: 2px; }
+  .trust-ring span { font-size: 25px; }
+}
+@media (max-width: 480px) {
+  h1 { font-size: 46px; }
+  h2 { font-size: 27px; }
+  .shell { padding-top: 32px; }
+  .brand-lockup { margin-bottom: 14px; }
+  .brand-lockup span { font-size: 12px; }
+  .tabs { gap: 22px; margin-right: -18px; padding-right: 18px; }
+  .mission-bar { padding: 16px; }
+  .mission-bar strong { font-size: 20px; }
+  .primary, .secondary, .approve, .reject { width: 100%; }
+  .actions, .review-actions, .builder-controls { flex-direction: column; align-items: stretch; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
