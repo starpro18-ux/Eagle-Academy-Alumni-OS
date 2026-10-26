@@ -15,6 +15,14 @@
       .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #eeefe8; border-radius: 4px; font-size: 13px; }
       .events-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 32px; }
       .events-actions a { text-decoration: none; }
+      .create-panel { margin-top: 22px; padding: 20px; border: 1px solid #f1dfb3; border-radius: 4px; background: #fffaf0; }
+      .create-form { display: grid; gap: 11px; margin-top: 16px; }
+      .create-form label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 800; }
+      .create-form input, .create-form textarea, .create-form select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 11px; color: var(--ink); background: #fff; font: inherit; }
+      .create-form textarea { min-height: 78px; resize: vertical; }
+      .create-form button { width: fit-content; }
+      .write-surface.hidden { display: none; }
+      .viewer-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
       .event-list { display: grid; gap: 16px; margin-top: 18px; }
       .event-item { padding: 20px; border: 1px solid var(--line); border-radius: 4px; background: #f5f2ec; }
       .event-top { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
@@ -32,7 +40,7 @@
       .tag.planning { background: #f3ede2; color: #6b5a3e; }
       .tag.cancelled { background: #f4ebe6; color: #8c4242; }
       .empty { color: var(--muted); font-size: 13px; line-height: 1.5; }
-      @media (max-width: 780px) { .event-top, .objective-item { display: grid; } .outcome { text-align: left; } }
+      @media (max-width: 780px) { .event-top, .objective-item { display: grid; } .create-form[style] { grid-template-columns: 1fr !important; } .outcome { text-align: left; } }
     </style>
   </head>
   <body>
@@ -45,9 +53,9 @@
           </a>
           <p class="eyebrow">EAGLE ACADEMY ALUMNI ASSOCIATION</p>
           <h1>Events & outcomes</h1>
-          <p class="lede">Connect planned events to measurable objectives and recorded results.</p>
+          <p class="lede">Plan an event, define the first objective, and keep outcomes tied to evidence.</p>
         </div>
-        <div class="mode-pill"><span class="pulse"></span> Read only</div>
+        <div class="mode-pill"><span class="pulse"></span> Member tools</div>
       </header>
 <nav class="tabs" aria-label="Pages">
   <a class="tab" href="./onboarding.html">Onboarding</a>
@@ -85,7 +93,26 @@
           </div>
           <p class="eyebrow">PROGRAM IMPACT</p>
           <h2>Events and outcomes</h2>
-          <p class="subtle">This view reports the event records already present in Supabase. Editing and outcome review remain outside the browser surface.</p>
+          <p class="subtle">Create an event plan here. Outcome recording and human review stay controlled and evidence-backed.</p>
+          <section class="create-panel" data-write-surface>
+            <p class="eyebrow">QUICK PLAN</p>
+            <h3>Create an event</h3>
+            <p class="subtle">Start with the event and an optional objective. You can attach evidence and outcomes as the work progresses.</p>
+            <form id="event-form" class="create-form">
+              <label for="event-name">Event name<input id="event-name" name="name" required maxlength="180" placeholder="2027 Alumni Leadership Summit" /></label>
+              <label for="event-description">Description<textarea id="event-description" name="description" maxlength="2000" placeholder="What is this event meant to accomplish?"></textarea></label>
+              <label for="event-start">Starts at<input id="event-start" name="starts_at" type="datetime-local" /></label>
+              <label for="event-end">Ends at<input id="event-end" name="ends_at" type="datetime-local" /></label>
+              <label for="event-objective">First objective <span>(optional)</span><input id="event-objective" name="objective_name" maxlength="180" placeholder="Reach 100 alumni participants" /></label>
+              <div class="create-form" style="grid-template-columns: 1fr 1fr; margin-top: 0;">
+                <label for="objective-target">Target<input id="objective-target" name="target" type="number" step="any" placeholder="100" /></label>
+                <label for="objective-unit">Unit<input id="objective-unit" name="unit" maxlength="40" placeholder="participants" /></label>
+              </div>
+              <label for="objective-method">Measurement method <span>(optional)</span><input id="objective-method" name="measurement_method" maxlength="240" placeholder="Registration count from the event roster" /></label>
+              <button class="primary" type="submit">Create event plan <span>→</span></button>
+            </form>
+          </section>
+          <p id="viewer-note" class="viewer-note write-surface hidden">Viewer access can review events but cannot create plans.</p>
           <div id="event-list" class="event-list"></div>
         </div>
 
