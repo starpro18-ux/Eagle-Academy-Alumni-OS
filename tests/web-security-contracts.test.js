@@ -71,24 +71,28 @@ test("integrations status is read-only and organization-scoped", () => {
 });
 
 
-test("people and commitments are read-only and organization-scoped", () => {
+test("people and commitments are organization-scoped writes", () => {
   const source = read("web/operations.js");
 
   assert.match(source, /eq\("organization_id", organizationId\)/);
   assert.match(source, /from\("people"\)/);
   assert.match(source, /from\("commitments"\)/);
-  assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
+  assert.match(source, /organization_id: organizationId/);
+  assert.match(source, /\.insert\(/);
+  assert.doesNotMatch(source, /\.update\(|\.delete\(/);
 });
 
 
-test("events and outcomes are read-only and organization-scoped", () => {
+test("events and outcomes are organization-scoped writes", () => {
   const source = read("web/events.js");
 
   assert.match(source, /eq\("organization_id", organizationId\)/);
   assert.match(source, /from\("events"\)/);
   assert.match(source, /from\("event_objectives"\)/);
   assert.match(source, /from\("event_outcomes"\)/);
-  assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
+  assert.match(source, /organization_id: organizationId/);
+  assert.match(source, /\.insert\(/);
+  assert.doesNotMatch(source, /\.update\(|\.delete\(/);
 });
 
 

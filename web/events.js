@@ -9,6 +9,12 @@ const signInForm = document.querySelector("#sign-in-form");
 const signedInEmail = document.querySelector("#signed-in-email");
 const organizationName = document.querySelector("#organization-name");
 const eventList = document.querySelector("#event-list");
+const eventForm = document.querySelector("#event-form");
+const writeSurface = document.querySelector("[data-write-surface]");
+const viewerNote = document.querySelector("#viewer-note");
+let organizationId = null;
+let currentSession = null;
+let writeEnabled = false;
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -30,6 +36,16 @@ function tag(text) {
   element.className = `tag ${String(text || "").replace(/[^a-z0-9_-]/gi, "").toLowerCase()}`.trim();
   element.textContent = text || "unknown";
   return element;
+}
+
+function setWriteAccess(role) {
+  writeEnabled = ["owner", "leader", "committee_lead", "contributor"].includes(role);
+  writeSurface.classList.toggle("hidden", !writeEnabled);
+  viewerNote.classList.toggle("hidden", writeEnabled);
+}
+
+function toIso(value) {
+  return value ? new Date(value).toISOString() : null;
 }
 
 function emptyItem(message) {
@@ -175,10 +191,13 @@ async function renderSession(supabase, session) {
 
   try {
     setStatus("Loading organization impact…");
+    currentSession = session;
     const workspace = await loadWorkspace(supabase, session.user.id);
-    const data = await loadData(supabase, workspace.organization.id);
+    organizationId = workspace.organization.id;
+    const data = await loadData(supabase, organizationId);
     signedInEmail.textContent = session.user.email || "authenticated user";
     organizationName.textContent = `${workspace.organization.name} · ${workspace.membership.role}`;
+    setWriteAccess(workspace.membership.role);
     renderEvents(data);
     show(appView);
     setStatus("");
@@ -208,6 +227,46 @@ async function start() {
       options: { emailRedirectTo: window.location.href },
     });
     setStatus(error ? error.message : "Magic link sent. Check your inbox.", error ? "error" : "success");
+  });
+
+  eventForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!writeEnabled) return setStatus("Viewer access cannot create events.", "error");
+    const values = new FormData(eventForm);
+    const name = String(values.get("name") || "").trim();
+    const description = String(values.get("description") || "").trim() || null;
+    const startsAt = toIso(String(values.get("starts_at") || ""));
+    const endsAt = toIso(String(values.get("ends_at") || ""));
+    const objectiveName = String(values.get("objective_name") || "").trim();
+    const targetValue = String(values.get("target") || "").trim();
+    const target = targetValue ? Number(targetValue) : null;
+    const unit = String(values.get("unit") || "").trim() || null;
+    const measurementMethod = String(values.get("measurement_method") || "").trim() || null;
+    if (targetValue && !Number.isFinite(target)) return setStatus("Objective target must be a valid number.", "error");
+    setStatus("Creating event plan…");
+    const { data: createdEvent, error: eventError } = await supabase.from("events").insert({
+      organization_id: organizationId,
+      name,
+      description,
+      starts_at: startsAt,
+      ends_at: endsAt,
+      status: "idea",
+    }).select("id").single();
+    if (eventError) return setStatus(eventError.message, "error");
+    if (objectiveName) {
+      const { error: objectiveError } = await supabase.from("event_objectives").insert({
+        organization_id: organizationId,
+        event_id: createdEvent.id,
+        name: objectiveName,
+        target,
+        unit,
+        measurement_method: measurementMethod,
+      });
+      if (objectiveError) return setStatus(objectiveError.message, "error");
+    }
+    eventForm.reset();
+    await renderSession(supabase, currentSession);
+    setStatus("Event plan created.", "success");
   });
 
   document.querySelector("#sign-out").addEventListener("click", async () => {
