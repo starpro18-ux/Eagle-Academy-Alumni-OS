@@ -177,6 +177,111 @@ function renderAccountabilityPulse(items) {
       : "Add a commitment to see the organization’s follow-through health.";
 }
 
+function renderCommitmentEditor(commitment, item, people, supabase) {
+  const currentEditor = item.querySelector(".commitment-edit-form");
+  if (currentEditor) {
+    currentEditor.remove();
+    return;
+  }
+
+  const form = document.createElement("form");
+  form.className = "commitment-edit-form";
+  form.setAttribute("aria-label", `Edit commitment: ${commitment.title}`);
+
+  const titleLabel = document.createElement("label");
+  titleLabel.textContent = "Commitment";
+  const titleInput = document.createElement("input");
+  titleInput.name = "title";
+  titleInput.required = true;
+  titleInput.maxLength = 240;
+  titleInput.value = commitment.title;
+  titleLabel.append(titleInput);
+
+  const ownerLabel = document.createElement("label");
+  ownerLabel.textContent = "Owner";
+  const ownerInput = document.createElement("select");
+  ownerInput.name = "owner_id";
+  const unassigned = document.createElement("option");
+  unassigned.value = "";
+  unassigned.textContent = "Unassigned";
+  ownerInput.append(unassigned);
+  for (const person of people) {
+    const option = document.createElement("option");
+    option.value = person.id;
+    option.textContent = person.display_name;
+    option.selected = person.id === commitment.owner_id;
+    ownerInput.append(option);
+  }
+  ownerLabel.append(ownerInput);
+
+  const dueLabel = document.createElement("label");
+  dueLabel.textContent = "Due date";
+  const dueInput = document.createElement("input");
+  dueInput.type = "date";
+  dueInput.name = "due_date";
+  dueInput.value = commitment.due_date || "";
+  dueLabel.append(dueInput);
+
+  const statusLabel = document.createElement("label");
+  statusLabel.textContent = "Status";
+  const statusInput = document.createElement("select");
+  statusInput.name = "status";
+  for (const status of COMMITMENT_STATUSES) {
+    const option = document.createElement("option");
+    option.value = status;
+    option.textContent = status.replace("_", " ");
+    option.selected = status === commitment.status;
+    statusInput.append(option);
+  }
+  statusLabel.append(statusInput);
+
+  const actions = document.createElement("div");
+  actions.className = "commitment-edit-actions";
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.className = "primary";
+  saveButton.textContent = "Save commitment";
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "secondary";
+  cancelButton.textContent = "Cancel";
+  cancelButton.addEventListener("click", () => form.remove());
+  actions.append(saveButton, cancelButton);
+
+  form.append(titleLabel, ownerLabel, dueLabel, statusLabel, actions);
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const title = titleInput.value.trim();
+    if (!title) {
+      setStatus("A commitment title is required.", "error");
+      titleInput.focus();
+      return;
+    }
+
+    saveButton.disabled = true;
+    setStatus("Saving commitment…");
+    const { data, error } = await supabase.functions.invoke("update-commitment", {
+      body: {
+        commitment_id: commitment.id,
+        title,
+        owner_id: ownerInput.value || null,
+        due_date: dueInput.value || null,
+        status: statusInput.value,
+      },
+    });
+    if (error || data?.error) {
+      saveButton.disabled = false;
+      setStatus(error?.message || data?.error || "Commitment update failed.", "error");
+      return;
+    }
+
+    await renderSession(supabase, currentSession);
+    setStatus("Commitment details updated and logged.", "success");
+  });
+  item.append(form);
+  titleInput.focus();
+}
+
 function renderCommitments(items, people, supabase) {
   const names = new Map(people.map((person) => [person.id, person.display_name]));
   commitmentList.replaceChildren();
@@ -194,8 +299,20 @@ function renderCommitments(items, people, supabase) {
     const title = document.createElement("div");
     title.className = "commitment-title";
     title.textContent = commitment.title;
+    const topActions = document.createElement("div");
+    topActions.className = "commitment-actions";
     const health = commitmentHealth(commitment);
-    top.append(title, tag(commitment.status));
+    topActions.append(tag(commitment.status));
+    if (writeEnabled) {
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "secondary commitment-edit-button";
+      editButton.textContent = "Edit";
+      editButton.setAttribute("aria-label", `Edit commitment: ${commitment.title}`);
+      editButton.addEventListener("click", () => renderCommitmentEditor(commitment, item, people, supabase));
+      topActions.append(editButton);
+    }
+    top.append(title, topActions);
     const meta = document.createElement("div");
     meta.className = "commitment-meta";
     const owner = names.get(commitment.owner_id) || (commitment.owner_id ? "Owner not in active roster" : "Unassigned");
