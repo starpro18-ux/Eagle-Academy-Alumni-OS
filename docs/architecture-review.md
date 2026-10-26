@@ -138,3 +138,8 @@ Event plans are now editable by contributors through a protected `update-event` 
 ### Extraction reliability
 
 PDF extraction now uses the serverless build provided by `unpdf`, which avoids the browser-oriented PDF.js legacy bundle that failed in the Supabase Edge Runtime. Failed source documents are retryable from the Ingest page; a retry clears derived fragments and evidence from the prior attempt before rebuilding them. OCR for scanned/image-only PDFs remains a separate capability.
+
+
+### Evidence transparency
+
+The Sources surface now lets authenticated organization members expand a completed source and inspect its extracted fragments. The preview is read-only, organization-scoped, and rendered as text; it gives reviewers a provenance checkpoint before recommendation generation or governance review.

@@ -40,6 +40,11 @@ test("source ingestion preserves the private organization-scoped upload contract
   assert.match(source, /storagePath = `\$\{workspace\.organization\.id\}\/\$\{documentId\}/);
   assert.match(source, /extraction_status/);
   assert.match(source, /MAX_FILE_BYTES = 50 \* 1024 \* 1024/);
+  assert.match(source, /loadEvidencePreview/);
+  assert.match(source, /from\("source_fragments"\)/);
+  assert.match(source, /eq\("organization_id", organizationId\)/);
+  assert.match(source, /eq\("source_document_id", source\.id\)/);
+  assert.match(source, /View extracted evidence/);
 });
 
 test("all authenticated browser modules use the pinned Supabase client", () => {
