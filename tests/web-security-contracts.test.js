@@ -126,7 +126,9 @@ test("source extraction supports PDF, Word, and both Excel formats", () => {
   assert.match(source, /application\/pdf/);
   assert.match(source, /wordprocessingml\.document/);
   assert.match(source, /application\/vnd\.ms-excel/);
-  assert.match(source, /pdfjsLib/);
+  assert.match(source, /unpdf@1\\.0\\.6/);
+  assert.match(source, /getDocumentProxy/);
+  assert.match(source, /extractPdfText/);
   assert.match(source, /XLSX/);
   assert.match(source, /MAX_EXTRACTABLE_BYTES = 25 \* 1024 \* 1024/);
 });
@@ -191,6 +193,8 @@ test("source extraction stays authenticated and organization-scoped", () => {
   assert.match(source, /eagle-source-documents/);
   assert.match(source, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(source, /extraction_status: "complete"/);
+  assert.match(source, /\\["pending", "failed"\\]/);
+  assert.match(source, /Previous extraction data could not be cleared/);
 });
 
 
