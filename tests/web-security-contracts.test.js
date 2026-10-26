@@ -232,3 +232,16 @@ test("command center exposes explainable leadership intelligence", () => {
   assert.match(source, /from\("source_documents"\)/);
   assert.doesNotMatch(source, /.insert\(|.update\(|.delete\(/);
 });
+
+
+test("event editing is contributor-gated and audited", () => {
+  const ui = read("web/events.js");
+  const worker = read("supabase/functions/update-event/index.ts");
+  assert.match(ui, /Edit event/);
+  assert.match(ui, /renderEventEditor/);
+  assert.match(ui, /functions\.invoke\("update-event"/);
+  assert.match(worker, /auth\.getUser\(\)/);
+  assert.match(worker, /CONTRIBUTOR_ROLES/);
+  assert.match(worker, /event\.updated/);
+  assert.match(worker, /description/);
+});

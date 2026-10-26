@@ -128,3 +128,8 @@ The Command Center now provides a rules-based leadership pulse across the existi
 - source documents still pending or failing extraction.
 
 The pulse is organization-scoped, read-only, and explainable. It points leaders to the next operating surface without making decisions or changing records.
+
+
+### Event editing
+
+Event plans are now editable by contributors through a protected `update-event` Edge Function. The edit path validates organization membership, event dates, allowed status values, and records `event.updated` in the audit trail. This keeps the operating record correct without allowing anonymous or cross-organization changes.
