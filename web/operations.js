@@ -10,6 +10,14 @@ const signedInEmail = document.querySelector("#signed-in-email");
 const organizationName = document.querySelector("#organization-name");
 const peopleList = document.querySelector("#people-list");
 const commitmentList = document.querySelector("#commitment-list");
+const personForm = document.querySelector("#person-form");
+const commitmentForm = document.querySelector("#commitment-form");
+const ownerSelect = document.querySelector("#commitment-owner");
+const writeSurface = document.querySelector("[data-write-surface]");
+const viewerNote = document.querySelector("#viewer-note");
+let organizationId = null;
+let currentSession = null;
+let writeEnabled = false;
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -31,6 +39,26 @@ function tag(text) {
   element.className = `tag ${String(text || "").replace(/[^a-z0-9_-]/gi, "").toLowerCase()}`.trim();
   element.textContent = text || "unknown";
   return element;
+}
+
+function renderOwnerOptions(people) {
+  ownerSelect.replaceChildren();
+  const unassigned = document.createElement("option");
+  unassigned.value = "";
+  unassigned.textContent = "Unassigned";
+  ownerSelect.append(unassigned);
+  for (const person of people) {
+    const option = document.createElement("option");
+    option.value = person.id;
+    option.textContent = person.display_name;
+    ownerSelect.append(option);
+  }
+}
+
+function setWriteAccess(role) {
+  writeEnabled = ["owner", "leader", "committee_lead", "contributor"].includes(role);
+  writeSurface.classList.toggle("hidden", !writeEnabled);
+  viewerNote.classList.toggle("hidden", writeEnabled);
 }
 
 function emptyItem(message) {
@@ -138,10 +166,14 @@ async function renderSession(supabase, session) {
 
   try {
     setStatus("Loading organization operations…");
+    currentSession = session;
     const workspace = await loadWorkspace(supabase, session.user.id);
-    const data = await loadData(supabase, workspace.organization.id);
+    organizationId = workspace.organization.id;
+    const data = await loadData(supabase, organizationId);
     signedInEmail.textContent = session.user.email || "authenticated user";
     organizationName.textContent = `${workspace.organization.name} · ${workspace.membership.role}`;
+    renderOwnerOptions(data.people);
+    setWriteAccess(workspace.membership.role);
     renderPeople(data.people);
     renderCommitments(data.commitments, data.people);
     show(appView);
@@ -172,6 +204,45 @@ async function start() {
       options: { emailRedirectTo: window.location.href },
     });
     setStatus(error ? error.message : "Magic link sent. Check your inbox.", error ? "error" : "success");
+  });
+
+  personForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!writeEnabled) return setStatus("Viewer access cannot create people.", "error");
+    const values = new FormData(personForm);
+    const displayName = String(values.get("display_name") || "").trim();
+    const email = String(values.get("email") || "").trim() || null;
+    setStatus("Adding person…");
+    const { error } = await supabase.from("people").insert({
+      organization_id: organizationId,
+      display_name: displayName,
+      email,
+    });
+    if (error) return setStatus(error.message, "error");
+    personForm.reset();
+    await renderSession(supabase, currentSession);
+    setStatus("Person added.", "success");
+  });
+
+  commitmentForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!writeEnabled) return setStatus("Viewer access cannot create commitments.", "error");
+    const values = new FormData(commitmentForm);
+    const title = String(values.get("title") || "").trim();
+    const ownerId = String(values.get("owner_id") || "") || null;
+    const dueDate = String(values.get("due_date") || "") || null;
+    setStatus("Adding commitment…");
+    const { error } = await supabase.from("commitments").insert({
+      organization_id: organizationId,
+      title,
+      owner_id: ownerId,
+      due_date: dueDate,
+      status: "proposed",
+    });
+    if (error) return setStatus(error.message, "error");
+    commitmentForm.reset();
+    await renderSession(supabase, currentSession);
+    setStatus("Commitment added.", "success");
   });
 
   document.querySelector("#sign-out").addEventListener("click", async () => {
