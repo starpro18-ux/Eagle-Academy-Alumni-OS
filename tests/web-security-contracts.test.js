@@ -104,9 +104,9 @@ test("people and commitments are organization-scoped writes", () => {
   assert.match(source, /from\("commitments"\)/);
   assert.match(source, /organization_id: organizationId/);
   assert.match(source, /\.insert\(/);
-  assert.match(source, /functions\.invoke\\("update-commitment"/);
+  assert.match(source, /functions\.invoke\("update-commitment"/);
   assert.match(source, /renderCommitmentEditor/);
-  assert.doesNotMatch(source, /\.delete\\(/);
+  assert.doesNotMatch(source, /\.delete\(/);
 });
 
 
