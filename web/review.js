@@ -103,8 +103,28 @@ async function loadData(supabase, organizationId) {
   for (const result of [recommendations, commitments, events, sources]) {
     if (result.error) throw result.error;
   }
+  const recommendationRows = recommendations.data ?? [];
+  const evidenceIds = [...new Set(recommendationRows.flatMap((item) => (item.recommendation_citations ?? []).map((citation) => citation.evidence_id)))];
+  let evidenceRows = [];
+  if (evidenceIds.length) {
+    const evidenceResult = await supabase
+      .from("evidence")
+      .select("id, claim, source_fragment_id")
+      .eq("organization_id", organizationId)
+      .in("id", evidenceIds);
+    if (evidenceResult.error) throw evidenceResult.error;
+    evidenceRows = evidenceResult.data ?? [];
+  }
+  const evidenceById = new Map(evidenceRows.map((evidence) => [evidence.id, evidence]));
+  const citedRecommendations = recommendationRows.map((item) => ({
+    ...item,
+    citedEvidence: (item.recommendation_citations ?? [])
+      .map((citation) => evidenceById.get(citation.evidence_id))
+      .filter(Boolean),
+  }));
+
   return {
-    recommendations: recommendations.data ?? [],
+    recommendations: citedRecommendations,
     commitments: commitments.data ?? [],
     events: events.data ?? [],
     sources: sources.data ?? [],
@@ -137,6 +157,28 @@ function renderRecommendations(items) {
     const citationCount = item.recommendation_citations?.length ?? 0;
     meta.textContent = "Agent: " + item.agent_name + " · " + formatDate(item.created_at) + " · Evidence: " + citationCount + (item.uncertainty ? " · Uncertainty: " + item.uncertainty : "");
     li.append(header, body, meta);
+
+    if (item.citedEvidence?.length) {
+      const citations = document.createElement("details");
+      citations.className = "evidence-citations";
+      const citationSummary = document.createElement("summary");
+      citationSummary.textContent = "Why this is proposed · " + item.citedEvidence.length + " cited claim" + (item.citedEvidence.length === 1 ? "" : "s");
+      const citationList = document.createElement("div");
+      citationList.className = "citation-list";
+      for (const [index, evidence] of item.citedEvidence.entries()) {
+        const citation = document.createElement("article");
+        citation.className = "citation-item";
+        const label = document.createElement("span");
+        label.className = "citation-label";
+        label.textContent = "Evidence " + (index + 1);
+        const claim = document.createElement("p");
+        claim.textContent = evidence.claim;
+        citation.append(label, claim);
+        citationList.append(citation);
+      }
+      citations.append(citationSummary, citationList);
+      li.append(citations);
+    }
 
     if (canReview && ["draft", "proposed"].includes(item.status)) {
       const actions = document.createElement("div");
