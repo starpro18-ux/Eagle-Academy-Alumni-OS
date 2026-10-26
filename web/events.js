@@ -12,9 +12,15 @@ const eventList = document.querySelector("#event-list");
 const eventForm = document.querySelector("#event-form");
 const writeSurface = document.querySelector("[data-write-surface]");
 const viewerNote = document.querySelector("#viewer-note");
+const outcomePanel = document.querySelector("#outcome-panel");
+const outcomeForm = document.querySelector("#outcome-form");
+const outcomeEventSelect = document.querySelector("#outcome-event");
+const outcomeObjectiveSelect = document.querySelector("#outcome-objective");
+const outcomeEvidenceSelect = document.querySelector("#outcome-evidence");
 let organizationId = null;
 let currentSession = null;
 let writeEnabled = false;
+let currentImpactData = { events: [], objectives: [], outcomes: [], evidence: [] };
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -41,6 +47,7 @@ function tag(text) {
 function setWriteAccess(role) {
   writeEnabled = ["owner", "leader", "committee_lead", "contributor"].includes(role);
   writeSurface.classList.toggle("hidden", !writeEnabled);
+  outcomePanel.classList.toggle("hidden", !writeEnabled);
   viewerNote.classList.toggle("hidden", writeEnabled);
 }
 
@@ -76,7 +83,7 @@ async function loadWorkspace(supabase, userId) {
 }
 
 async function loadData(supabase, organizationId) {
-  const [events, objectives, outcomes] = await Promise.all([
+  const [events, objectives, outcomes, evidence] = await Promise.all([
     supabase
       .from("events")
       .select("id, name, description, starts_at, ends_at, status")
@@ -93,11 +100,18 @@ async function loadData(supabase, organizationId) {
       .select("id, event_id, objective_id, actual, narrative, source_evidence_id, reviewed_at")
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("evidence")
+      .select("id, claim, observed_at")
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
   if (events.error) throw events.error;
   if (objectives.error) throw objectives.error;
   if (outcomes.error) throw outcomes.error;
-  return { events: events.data ?? [], objectives: objectives.data ?? [], outcomes: outcomes.data ?? [] };
+  if (evidence.error) throw evidence.error;
+  return { events: events.data ?? [], objectives: objectives.data ?? [], outcomes: outcomes.data ?? [], evidence: evidence.data ?? [] };
 }
 
 function formatTarget(objective) {
@@ -105,8 +119,66 @@ function formatTarget(objective) {
   return `Target: ${objective.target}${objective.unit ? ` ${objective.unit}` : ""}`;
 }
 
+function renderOutcomeObjectives(data) {
+  const eventId = outcomeEventSelect.value;
+  outcomeObjectiveSelect.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = eventId ? "Choose an objective" : "Choose an event first";
+  outcomeObjectiveSelect.append(placeholder);
+  const objectives = data.objectives.filter((objective) => objective.event_id === eventId);
+  for (const objective of objectives) {
+    const option = document.createElement("option");
+    option.value = objective.id;
+    option.textContent = objective.name;
+    outcomeObjectiveSelect.append(option);
+  }
+  outcomeObjectiveSelect.disabled = !eventId || !objectives.length;
+}
+
+function renderOutcomeForm(data) {
+  currentImpactData = data;
+  const previousEventId = outcomeEventSelect.value;
+  outcomeEventSelect.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = data.events.length ? "Choose an event" : "Create an event first";
+  outcomeEventSelect.append(placeholder);
+  for (const event of data.events) {
+    const option = document.createElement("option");
+    option.value = event.id;
+    option.textContent = event.name;
+    option.selected = event.id === previousEventId;
+    outcomeEventSelect.append(option);
+  }
+  outcomeEventSelect.disabled = !data.events.length;
+  outcomeEvidenceSelect.replaceChildren();
+  const noEvidence = document.createElement("option");
+  noEvidence.value = "";
+  noEvidence.textContent = data.evidence.length ? "No evidence attached" : "No extracted evidence available";
+  outcomeEvidenceSelect.append(noEvidence);
+  for (const evidence of data.evidence) {
+    const option = document.createElement("option");
+    option.value = evidence.id;
+    option.textContent = String(evidence.claim || "Evidence record").slice(0, 140);
+    outcomeEvidenceSelect.append(option);
+  }
+  renderOutcomeObjectives(data);
+}
+
+function outcomeSignal(objective, outcome) {
+  if (!outcome) return { label: "No outcome yet", className: "unreviewed" };
+  if (outcome.actual === null || outcome.actual === undefined || objective.target === null || objective.target === undefined) {
+    return { label: outcome.reviewed_at ? "Reviewed outcome" : "Unreviewed outcome", className: outcome.reviewed_at ? "on-track" : "unreviewed" };
+  }
+  return Number(outcome.actual) >= Number(objective.target)
+    ? { label: "On track", className: "on-track" }
+    : { label: "Below target", className: "below-target" };
+}
+
 function renderEvents(data) {
   eventList.replaceChildren();
+  renderOutcomeForm(data);
   if (!data.events.length) {
     eventList.append(emptyItem("No events have been recorded yet."));
     return;
@@ -170,9 +242,18 @@ function renderEvents(data) {
           actual.textContent = `${recorded.actual}${objective.unit ? ` ${objective.unit}` : ""}`;
           outcome.append(actual);
         }
+        const signal = outcomeSignal(objective, recorded);
         const label = document.createElement("span");
-        label.textContent = recorded ? (recorded.reviewed_at ? "Reviewed outcome" : "Recorded outcome") : "No outcome yet";
+        label.className = `outcome-status ${signal.className}`;
+        label.textContent = signal.label;
         outcome.append(label);
+        if (recorded?.source_evidence_id) {
+          const evidence = data.evidence.find((item) => item.id === recorded.source_evidence_id);
+          const evidenceLabel = document.createElement("span");
+          evidenceLabel.className = "outcome-evidence";
+          evidenceLabel.textContent = evidence ? `Evidence: ${String(evidence.claim || "").slice(0, 120)}` : "Evidence attached";
+          outcome.append(evidenceLabel);
+        }
         item.append(objectiveDetails, outcome);
         list.append(item);
       }
@@ -227,6 +308,29 @@ async function start() {
       options: { emailRedirectTo: window.location.href },
     });
     setStatus(error ? error.message : "Magic link sent. Check your inbox.", error ? "error" : "success");
+  });
+
+  outcomeEventSelect.addEventListener("change", () => renderOutcomeObjectives(currentImpactData));
+
+  outcomeForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!writeEnabled) return setStatus("Viewer access cannot record outcomes.", "error");
+    const values = new FormData(outcomeForm);
+    const eventId = String(values.get("event_id") || "");
+    const objectiveId = String(values.get("objective_id") || "");
+    const actualValue = String(values.get("actual") || "").trim();
+    const actual = actualValue ? Number(actualValue) : null;
+    const narrative = String(values.get("narrative") || "").trim();
+    const sourceEvidenceId = String(values.get("source_evidence_id") || "") || null;
+    if (actualValue && !Number.isFinite(actual)) return setStatus("Actual result must be a valid number.", "error");
+    setStatus("Recording outcome…");
+    const { data, error } = await supabase.functions.invoke("record-event-outcome", {
+      body: { event_id: eventId, objective_id: objectiveId, actual, narrative, source_evidence_id: sourceEvidenceId },
+    });
+    if (error || data?.error) return setStatus(error?.message || data?.error || "Outcome recording failed.", "error");
+    outcomeForm.reset();
+    await renderSession(supabase, currentSession);
+    setStatus("Outcome recorded. It remains unreviewed until a leader validates it.", "success");
   });
 
   eventForm.addEventListener("submit", async (event) => {
