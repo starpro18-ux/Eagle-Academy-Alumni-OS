@@ -104,3 +104,15 @@ The first operational intelligence skill is deliberately rules-based and explain
 - open work that is currently on track.
 
 Contributors can change commitment status through the authenticated `update-commitment` Edge Function. The worker validates organization membership, sets `completed_at` when appropriate, and records `commitment.status_changed` in `audit_events`. This makes follow-through visible without allowing the system to silently execute work.
+
+
+### Service and outcome intelligence
+
+The next impact skill now connects event objectives to observed outcomes. Contributors can record an actual result and narrative, optionally attach organization-scoped evidence, and see an explainable signal:
+
+- on track when the actual meets or exceeds the target;
+- below target when the actual is under the target;
+- unreviewed when the result has not been leader-validated;
+- no outcome when the objective still needs follow-through.
+
+Outcome writes go through the authenticated `record-event-outcome` Edge Function. It validates the event, objective, evidence organization, and contributor membership before inserting the outcome and recording `event.outcome_recorded`. It does not mark outcomes reviewed or trigger operational action.
