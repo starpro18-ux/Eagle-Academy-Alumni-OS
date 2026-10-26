@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 
 const config = globalThis.EAGLE_SUPABASE_CONFIG ?? {};
+const EVENT_STATUSES = ["idea", "planning", "approved", "completed", "cancelled"];
 const setupView = document.querySelector("#setup-view");
 const signInView = document.querySelector("#sign-in-view");
 const appView = document.querySelector("#app-view");
@@ -176,7 +177,107 @@ function outcomeSignal(objective, outcome) {
     : { label: "Below target", className: "below-target" };
 }
 
-function renderEvents(data) {
+function dateTimeLocal(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function renderEventEditor(event, article, supabase) {
+  const existing = article.querySelector(".event-edit-form");
+  if (existing) {
+    existing.remove();
+    return;
+  }
+
+  const form = document.createElement("form");
+  form.className = "event-edit-form";
+  const nameLabel = document.createElement("label");
+  nameLabel.textContent = "Event name";
+  const nameInput = document.createElement("input");
+  nameInput.name = "name";
+  nameInput.required = true;
+  nameInput.maxLength = 180;
+  nameInput.value = event.name;
+  nameLabel.append(nameInput);
+  const descriptionLabel = document.createElement("label");
+  descriptionLabel.textContent = "Description";
+  const descriptionInput = document.createElement("textarea");
+  descriptionInput.name = "description";
+  descriptionInput.maxLength = 2000;
+  descriptionInput.placeholder = "What is this event meant to accomplish?";
+  descriptionInput.value = event.description || "";
+  descriptionLabel.append(descriptionInput);
+  const schedule = document.createElement("div");
+  schedule.className = "create-form";
+  schedule.style.gridTemplateColumns = "1fr 1fr";
+  schedule.style.marginTop = "0";
+  const startLabel = document.createElement("label");
+  startLabel.textContent = "Starts at";
+  const startInput = document.createElement("input");
+  startInput.type = "datetime-local";
+  startInput.name = "starts_at";
+  startInput.value = dateTimeLocal(event.starts_at);
+  startLabel.append(startInput);
+  const endLabel = document.createElement("label");
+  endLabel.textContent = "Ends at";
+  const endInput = document.createElement("input");
+  endInput.type = "datetime-local";
+  endInput.name = "ends_at";
+  endInput.value = dateTimeLocal(event.ends_at);
+  endLabel.append(endInput);
+  schedule.append(startLabel, endLabel);
+  const statusLabel = document.createElement("label");
+  statusLabel.textContent = "Status";
+  const statusSelect = document.createElement("select");
+  statusSelect.name = "status";
+  for (const status of EVENT_STATUSES) {
+    const option = document.createElement("option");
+    option.value = status;
+    option.textContent = status.replace("_", " ");
+    option.selected = status === event.status;
+    statusSelect.append(option);
+  }
+  statusLabel.append(statusSelect);
+  const actions = document.createElement("div");
+  actions.className = "event-edit-actions";
+  const save = document.createElement("button");
+  save.type = "submit";
+  save.className = "primary";
+  save.textContent = "Save changes →";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.className = "text-button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => form.remove());
+  actions.append(save, cancel);
+  form.append(nameLabel, descriptionLabel, schedule, statusLabel, actions);
+  form.addEventListener("submit", async (submitEvent) => {
+    submitEvent.preventDefault();
+    save.disabled = true;
+    setStatus("Saving event changes…");
+    const payload = {
+      event_id: event.id,
+      name: nameInput.value.trim(),
+      description: descriptionInput.value.trim() || null,
+      starts_at: toIso(startInput.value),
+      ends_at: toIso(endInput.value),
+      status: statusSelect.value,
+    };
+    const { data, error } = await supabase.functions.invoke("update-event", { body: payload });
+    if (error || data?.error) {
+      setStatus(error?.message || data?.error || "Event update failed.", "error");
+      save.disabled = false;
+      return;
+    }
+    await renderSession(supabase, currentSession);
+    setStatus("Event updated and logged.", "success");
+  });
+  article.append(form);
+}
+
+function renderEvents(data, supabase) {
   eventList.replaceChildren();
   renderOutcomeForm(data);
   if (!data.events.length) {
@@ -208,7 +309,18 @@ function renderEvents(data) {
     meta.className = "event-meta";
     meta.textContent = `${formatDate(event.starts_at)} · ${event.ends_at ? `ends ${formatDate(event.ends_at)}` : "end date not recorded"}`;
     details.append(title, meta);
-    top.append(details, tag(event.status));
+    const eventActions = document.createElement("div");
+    eventActions.className = "event-actions";
+    eventActions.append(tag(event.status));
+    if (writeEnabled) {
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "secondary";
+      editButton.textContent = "Edit event";
+      editButton.addEventListener("click", () => renderEventEditor(event, article, supabase));
+      eventActions.append(editButton);
+    }
+    top.append(details, eventActions);
     article.append(top);
     if (event.description) {
       const description = document.createElement("p");
@@ -279,7 +391,7 @@ async function renderSession(supabase, session) {
     signedInEmail.textContent = session.user.email || "authenticated user";
     organizationName.textContent = `${workspace.organization.name} · ${workspace.membership.role}`;
     setWriteAccess(workspace.membership.role);
-    renderEvents(data);
+    renderEvents(data, supabase);
     show(appView);
     setStatus("");
   } catch (error) {
