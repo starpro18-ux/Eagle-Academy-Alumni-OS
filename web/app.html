@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eagle Academy · Command center</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      .command-card { max-width: 1120px; margin: 42px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); }
+      .auth-view.hidden, .next-action.hidden { display: none; }
+      .setup-note { padding: 12px; color: #755821; background: #fffaf0; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
+      .status { min-height: 22px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+      .status.error { color: #9b4c4c; }
+      .status.success { color: var(--green); }
+      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #f1f8f3; border-radius: 10px; font-size: 13px; }
+      .command-hero { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top: 26px; }
+      .hero-panel { padding: 28px; color: white; background: var(--navy); border-radius: 16px; }
+      .hero-panel .eyebrow { color: #a9bed0; }
+      .hero-panel h2 { max-width: 540px; color: white; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.04em; }
+      .hero-panel p { max-width: 560px; color: #c4d2dc; line-height: 1.6; }
+      .next-action { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; padding: 15px 17px; color: var(--ink); background: #fffaf0; border-radius: 12px; }
+      .next-action strong, .next-action span { display: block; }
+      .next-action span { color: var(--muted); margin-top: 3px; font-size: 12px; }
+      .next-action a { flex: 0 0 auto; color: var(--navy); font-weight: 800; text-decoration: none; }
+      .pulse-card { display: flex; flex-direction: column; justify-content: space-between; padding: 26px; border: 1px solid var(--line); border-radius: 16px; background: #fbfcfa; }
+      .pulse-score { color: var(--navy); font-size: 48px; font-weight: 800; letter-spacing: -.06em; }
+      .pulse-score small { color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 0; }
+      .progress-track { height: 8px; margin-top: 14px; overflow: hidden; background: #e8edf0; border-radius: 99px; }
+      .progress-track span { display: block; height: 100%; background: var(--green); border-radius: inherit; transition: width .2s ease; }
+      .progress-copy { color: var(--muted); font-size: 13px; line-height: 1.45; }
+      .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 24px 0 34px; }
+      .stat { padding: 17px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfa; }
+      .stat-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+      .stat-value { display: block; margin-top: 8px; color: var(--navy); font-size: 30px; letter-spacing: -.04em; }
+      .section-heading { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin: 30px 0 14px; }
+      .section-heading h3 { margin-bottom: 0; }
+      .section-heading a { color: var(--blue); font-size: 12px; font-weight: 800; text-decoration: none; }
+      .activity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      .panel { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfa; }
+      .activity-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+      .activity-item { display: flex; justify-content: space-between; gap: 14px; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+      .activity-title { font-weight: 700; overflow-wrap: anywhere; }
+      .activity-meta { color: var(--muted); font-size: 11px; text-align: right; }
+      .empty { color: var(--muted); font-size: 13px; line-height: 1.5; }
+      .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .action-card { display: block; min-height: 132px; padding: 18px; color: var(--ink); border: 1px solid var(--line); border-radius: 14px; background: white; text-decoration: none; transition: transform .15s ease, border-color .15s ease; }
+      .action-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+      .action-icon { color: var(--gold); font-size: 23px; }
+      .action-card strong, .action-card span { display: block; }
+      .action-card strong { margin-top: 13px; }
+      .action-card span { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+      @media (max-width: 840px) { .command-hero, .activity-grid { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: repeat(2, 1fr); } .action-grid { grid-template-columns: 1fr; } }
+      @media (max-width: 520px) { .command-card { padding: 20px; } .stat-grid { grid-template-columns: 1fr 1fr; } .next-action { display: grid; } .activity-item { display: grid; } .activity-meta { text-align: left; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">EAGLE ACADEMY ALUMNI ASSOCIATION</p>
+          <h1>Command center</h1>
+          <p class="lede">A calmer starting point for your evidence, decisions, and follow-through.</p>
+        </div>
+        <div class="mode-pill"><span class="pulse"></span> Protected workspace</div>
+      </header>
+
+      <nav class="tabs" aria-label="Pages">
+        <a class="tab active" href="./app.html">Home</a>
+        <a class="tab" href="./workspace.html">Workspace</a>
+        <a class="tab" href="./ingest.html">Sources</a>
+        <a class="tab" href="./review.html">Review</a>
+        <a class="tab" href="./operations.html">People</a>
+        <a class="tab" href="./events.html">Events</a>
+        <a class="tab" href="./integrations.html">Integrations</a>
+      </nav>
+
+      <section class="command-card" aria-live="polite">
+        <div id="setup-view" class="auth-view">
+          <p class="setup-note">This page needs a local <code>config.js</code> copied from <code>config.example.js</code>. Only use a publishable key in browser code.</p>
+        </div>
+
+        <div id="sign-in-view" class="auth-view hidden">
+          <p class="eyebrow">AUTHENTICATION</p>
+          <h2>Sign in to your command center</h2>
+          <p class="subtle">Your organization workspace is available only to authenticated members.</p>
+          <form id="sign-in-form" class="form-stack">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="owner@example.org" />
+            <button class="primary" type="submit">Send magic link <span>→</span></button>
+          </form>
+        </div>
+
+        <div id="app-view" class="auth-view hidden">
+          <div class="signed-in"><span>Signed in as <strong id="signed-in-email"></strong><br /><small id="organization-name"></small></span><button id="sign-out" class="text-button" type="button">Sign out</button></div>
+
+          <div class="command-hero">
+            <section class="hero-panel">
+              <p class="eyebrow">TODAY’S OPERATING VIEW</p>
+              <h2 id="hero-title">Let’s make the next thing clear.</h2>
+              <p id="hero-copy">Your workspace is ready for its first source. Start with the material your team already trusts.</p>
+              <div id="next-action" class="next-action">
+                <div><strong id="next-action-title">Add your first source</strong><span id="next-action-copy">Upload a meeting note, plan, or transcript.</span></div>
+                <a id="next-action-link" href="./ingest.html">Start <span>→</span></a>
+              </div>
+            </section>
+            <aside class="pulse-card">
+              <div>
+                <p class="eyebrow">WORKSPACE MOMENTUM</p>
+                <div class="pulse-score"><span id="momentum-score">0</span><small> / 100</small></div>
+                <p id="momentum-copy" class="progress-copy">A few useful records will make this view come alive.</p>
+              </div>
+              <div class="progress-track" aria-label="Workspace momentum"><span id="momentum-bar" style="width: 0%"></span></div>
+            </aside>
+          </div>
+
+          <div class="stat-grid" aria-label="Workspace summary">
+            <div class="stat"><span class="stat-label">Sources</span><strong id="source-count" class="stat-value">—</strong></div>
+            <div class="stat"><span class="stat-label">Evidence</span><strong id="evidence-count" class="stat-value">—</strong></div>
+            <div class="stat"><span class="stat-label">Commitments</span><strong id="commitment-count" class="stat-value">—</strong></div>
+            <div class="stat"><span class="stat-label">Events</span><strong id="event-count" class="stat-value">—</strong></div>
+            <div class="stat"><span class="stat-label">Recommendations</span><strong id="recommendation-count" class="stat-value">—</strong></div>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">RECENT WORK</p><h3>What’s moving</h3></div><a href="./workspace.html">Open full workspace →</a></div>
+          <div class="activity-grid">
+            <section class="panel"><h3>Sources</h3><ul id="source-list" class="activity-list"></ul></section>
+            <section class="panel"><h3>Commitments</h3><ul id="commitment-list" class="activity-list"></ul></section>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">SHORTCUTS</p><h3>What do you want to do?</h3></div></div>
+          <div class="action-grid">
+            <a class="action-card" href="./ingest.html"><span class="action-icon">＋</span><strong>Add a source</strong><span>Bring in a meeting note, plan, or transcript.</span></a>
+            <a class="action-card" href="./review.html"><span class="action-icon">✓</span><strong>Review decisions</strong><span>See recommendations and items awaiting human attention.</span></a>
+            <a class="action-card" href="./events.html"><span class="action-icon">◌</span><strong>Track an event</strong><span>Connect objectives to outcomes and evidence.</span></a>
+          </div>
+        </div>
+
+        <p id="status" class="status" role="status"></p>
+      </section>
+    </main>
+    <script src="./config.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
