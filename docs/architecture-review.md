@@ -143,3 +143,8 @@ PDF extraction now uses the serverless build provided by `unpdf`, which avoids t
 ### Evidence transparency
 
 The Sources surface now lets authenticated organization members expand a completed source and inspect its extracted fragments. The preview is read-only, organization-scoped, and rendered as text; it gives reviewers a provenance checkpoint before recommendation generation or governance review.
+
+
+### Recommendation provenance
+
+Review cards now let leaders expand the cited claims behind a proposal. The UI reads evidence through the authenticated, organization-scoped client and renders claims as text; the existing review worker remains the only path for approval, rejection, or correction.
