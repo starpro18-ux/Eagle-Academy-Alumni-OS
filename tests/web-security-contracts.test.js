@@ -105,3 +105,17 @@ test("command center is organization-scoped and browser-write free", () => {
   assert.match(source, /count\(supabase, "events"/);
   assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
 });
+
+
+test("source extraction stays authenticated and organization-scoped", () => {
+  const source = read("supabase/functions/extract-source/index.ts");
+
+  assert.match(source, /auth\.getUser\(\)/);
+  assert.match(source, /from\("organization_memberships"\)/);
+  assert.match(source, /eq\("organization_id", source\.organization_id\)/);
+  assert.match(source, /from\("source_fragments"\)/);
+  assert.match(source, /from\("evidence"\)/);
+  assert.match(source, /eagle-source-documents/);
+  assert.match(source, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(source, /extraction_status: "complete"/);
+});
