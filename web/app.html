@@ -32,6 +32,22 @@
       .stat { padding: 17px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfa; }
       .stat-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
       .stat-value { display: block; margin-top: 8px; color: var(--navy); font-size: 30px; letter-spacing: -.04em; }
+      .leadership-pulse { margin: 24px 0 34px; padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: #fffaf0; }
+      .pulse-heading { display: flex; justify-content: space-between; gap: 18px; align-items: end; }
+      .pulse-heading h3 { margin-bottom: 0; }
+      .pulse-heading p { max-width: 520px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .pulse-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+      .pulse-card { min-height: 100px; padding: 14px; border: 1px solid #eadfc8; border-radius: 12px; background: rgba(255, 255, 255, .7); }
+      .pulse-card.alert { background: #f8eee7; border-color: #e6cfc1; }
+      .pulse-card-label { display: block; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+      .pulse-card-value { display: block; margin-top: 7px; color: var(--navy); font-size: 28px; letter-spacing: -.05em; }
+      .pulse-card-copy { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+      .pulse-next { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #eadfc8; }
+      .pulse-next strong, .pulse-next span { display: block; }
+      .pulse-next span { margin-top: 4px; color: var(--muted); font-size: 12px; }
+      .pulse-next a { flex: 0 0 auto; color: var(--navy); font-size: 12px; font-weight: 800; text-decoration: none; }
+      @media (max-width: 840px) { .pulse-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 520px) { .pulse-heading, .pulse-next { display: grid; } .pulse-grid { grid-template-columns: 1fr 1fr; } }
       .section-heading { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin: 30px 0 14px; }
       .section-heading h3 { margin-bottom: 0; }
       .section-heading a { color: var(--blue); font-size: 12px; font-weight: 800; text-decoration: none; }
@@ -127,6 +143,23 @@
               <div class="progress-track" aria-label="Workspace momentum"><span id="momentum-bar" style="width: 0%"></span></div>
             </aside>
           </div>
+
+          <section class="leadership-pulse" aria-live="polite" aria-label="Leadership pulse">
+            <div class="pulse-heading">
+              <div><p class="eyebrow">LEADERSHIP INTELLIGENCE</p><h3>Where attention goes next</h3></div>
+              <p>One explainable view of the work that needs an owner, a decision, evidence, or impact follow-through.</p>
+            </div>
+            <div class="pulse-grid">
+              <div id="pulse-attention" class="pulse-card alert"><span class="pulse-card-label">Needs attention</span><strong class="pulse-card-value">—</strong><span class="pulse-card-copy">Commitments requiring intervention.</span></div>
+              <div id="pulse-decisions" class="pulse-card"><span class="pulse-card-label">Decision queue</span><strong class="pulse-card-value">—</strong><span class="pulse-card-copy">Proposals awaiting human review.</span></div>
+              <div id="pulse-impact" class="pulse-card"><span class="pulse-card-label">Impact gaps</span><strong class="pulse-card-value">—</strong><span class="pulse-card-copy">Objectives without recorded outcomes.</span></div>
+              <div id="pulse-evidence" class="pulse-card"><span class="pulse-card-label">Evidence gaps</span><strong class="pulse-card-value">—</strong><span class="pulse-card-copy">Sources still needing extraction.</span></div>
+            </div>
+            <div class="pulse-next">
+              <div><strong id="pulse-next-title">Building the first operating signal</strong><span id="pulse-next-copy">Add a source, commitment, event, or recommendation to activate this view.</span></div>
+              <a id="pulse-next-link" href="./ingest.html">Start with sources →</a>
+            </div>
+          </section>
 
           <div class="stat-grid" aria-label="Workspace summary">
             <div class="stat"><span class="stat-label">Sources</span><strong id="source-count" class="stat-value">—</strong></div>
