@@ -40,6 +40,13 @@
       .event-title { font-size: 20px; font-weight: 750; }
       .event-meta { color: var(--muted); font-size: 12px; margin-top: 5px; }
       .event-description { color: var(--muted); margin: 14px 0 0; line-height: 1.5; font-size: 13px; }
+      .event-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+      .event-edit-form { display: grid; gap: 10px; margin-top: 16px; padding: 16px; border: 1px solid #eadfc8; border-radius: 10px; background: #fffaf0; }
+      .event-edit-form.hidden { display: none; }
+      .event-edit-form label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 800; }
+      .event-edit-form input, .event-edit-form textarea, .event-edit-form select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 11px; color: var(--ink); background: #fff; font: inherit; }
+      .event-edit-form textarea { min-height: 84px; resize: vertical; }
+      .event-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
       .objective-list { display: grid; gap: 9px; margin: 18px 0 0; padding: 0; list-style: none; }
       .objective-item { display: grid; grid-template-columns: 1fr auto; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--white); }
       .objective-name { font-weight: 700; }
