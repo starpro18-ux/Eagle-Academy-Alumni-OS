@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 import JSZip from "https://esm.sh/jszip@3.10.1";
-import * as pdfjsLib from "https://esm.sh/pdfjs-dist@4.10.38/legacy/build/pdf.mjs";
+import { extractText as extractPdfText, getDocumentProxy } from "https://esm.sh/unpdf@1.0.6?target=deno";
 import * as XLSX from "https://esm.sh/xlsx@0.18.5";
 
 const corsHeaders = {
@@ -73,16 +73,15 @@ async function extractXlsx(bytes) {
 }
 
 async function extractPdf(bytes) {
-  const document = await pdfjsLib.getDocument({ data: bytes, disableWorker: true }).promise;
-  const pages = [];
-  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
-    const page = await document.getPage(pageNumber);
-    const content = await page.getTextContent();
-    const text = content.items.map((item) => typeof item.str === "string" ? item.str : "").join(" ").trim();
-    if (text) pages.push("Page " + pageNumber + "\n" + text);
-    if (pages.length >= 100) break;
+  const document = await getDocumentProxy(bytes);
+  if (document.numPages > 100) {
+    throw new Error("This PDF has more than the 100-page extraction limit.");
   }
-  return pages.join("\n\n");
+  const { text } = await extractPdfText(document, { mergePages: false });
+  return text.map((page, index) => {
+    const normalized = typeof page === "string" ? page.trim() : "";
+    return normalized ? "Page " + (index + 1) + "\n" + normalized : "";
+  }).filter(Boolean).join("\n\n");
 }
 
 async function extractText(file, mimeType) {
@@ -143,7 +142,7 @@ Deno.serve(async (request) => {
     return json({ error: "You do not have permission to extract this organization's sources." }, 403);
   }
 
-  if (source.extraction_status !== "pending") {
+  if (!["pending", "failed"].includes(source.extraction_status)) {
     return json({ error: `This source is already ${source.extraction_status}.` }, 409);
   }
 
@@ -154,6 +153,33 @@ Deno.serve(async (request) => {
 
   if (!source.storage_path) return fail("This source has no private storage path.");
   if (!EXTRACTABLE_MIME_TYPES.has(source.mime_type)) return fail("This file type is not supported by the extraction worker.");
+
+  if (source.extraction_status === "failed") {
+    const { data: priorFragments, error: priorFragmentsError } = await adminClient
+      .from("source_fragments")
+      .select("id")
+      .eq("source_document_id", source.id);
+    if (priorFragmentsError) return fail("Previous extraction data could not be cleared.", 500);
+    const priorFragmentIds = (priorFragments ?? []).map((fragment) => fragment.id);
+    if (priorFragmentIds.length) {
+      const { error: priorEvidenceError } = await adminClient
+        .from("evidence")
+        .delete()
+        .in("source_fragment_id", priorFragmentIds);
+      if (priorEvidenceError) return fail("Previous extraction evidence could not be cleared.", 500);
+      const { error: priorDeleteError } = await adminClient
+        .from("source_fragments")
+        .delete()
+        .in("id", priorFragmentIds);
+      if (priorDeleteError) return fail("Previous source fragments could not be cleared.", 500);
+    }
+  }
+
+  const { error: pendingError } = await adminClient
+    .from("source_documents")
+    .update({ extraction_status: "pending" })
+    .eq("id", source.id);
+  if (pendingError) return fail("The source could not be queued for extraction.", 500);
 
   try {
     const { data: file, error: downloadError } = await adminClient.storage
