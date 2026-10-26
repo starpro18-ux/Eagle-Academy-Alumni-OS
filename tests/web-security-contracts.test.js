@@ -104,9 +104,9 @@ test("people and commitments are organization-scoped writes", () => {
   assert.match(source, /from\("commitments"\)/);
   assert.match(source, /organization_id: organizationId/);
   assert.match(source, /\.insert\(/);
-  assert.match(source, /functions\\.invoke\\("update-commitment"/);
+  assert.match(source, /functions\.invoke\\("update-commitment"/);
   assert.match(source, /renderCommitmentEditor/);
-  assert.doesNotMatch(source, /\\.delete\\(/);
+  assert.doesNotMatch(source, /\.delete\\(/);
 });
 
 
@@ -225,15 +225,19 @@ test("source extraction stays authenticated and organization-scoped", () => {
 });
 
 
-test("accountability intelligence is explainable and status changes are governed", () => {
+test("accountability intelligence is explainable and commitment edits are governed", () => {
   const ui = read("web/operations.js");
   const worker = read("supabase/functions/update-commitment/index.ts");
   assert.match(ui, /commitmentHealth/);
   assert.match(ui, /renderAccountabilityPulse/);
+  assert.match(ui, /renderCommitmentEditor/);
   assert.match(ui, /functions\.invoke\("update-commitment"/);
   assert.match(worker, /auth\.getUser\(\)/);
   assert.match(worker, /CONTRIBUTOR_ROLES/);
-  assert.match(worker, /commitment\.status_changed/);
+  assert.match(worker, /commitment\.updated/);
+  assert.match(worker, /title/);
+  assert.match(worker, /owner_id/);
+  assert.match(worker, /due_date/);
   assert.match(worker, /completed_at/);
 });
 
