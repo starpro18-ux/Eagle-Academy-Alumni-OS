@@ -71,7 +71,7 @@ test("integrations status is read-only and organization-scoped", () => {
 });
 
 
-test("people and commitments are read-only and organization-scoped", () => {
+test("people and commitments are organization-scoped writes", () => {
   const source = read("web/operations.js");
 
   assert.match(source, /eq\("organization_id", organizationId\)/);
