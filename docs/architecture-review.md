@@ -74,8 +74,8 @@ A new agent or automated skill is not ready until it:
 
 - Scanned/image-only PDFs need OCR; current extraction handles text layers.
 - Large documents need queued/background extraction once volume grows.
-- Recommendation generation needs rate limits and usage budgets before broad rollout.
-- The OpenAI key must remain a Supabase Edge Function secret.
+- Recommendation generation is capped at 20 runs per organization per 10-minute window; usage budgets and billing alerts are still needed before broad rollout.
+- The OpenAI key must remain a Supabase Edge Function secret; common email, phone, and SSN-like patterns are redacted before claims are sent to the model.
 - The live project currently has no organization/application rows; a pilot setup is required before end-to-end validation.
 - Supabase still reports leaked-password protection disabled; enable it in Auth settings.
 - Multiple permissive RLS policies are currently intentional role overlays; keep them monitored and do not replace them with weaker organization-only policies.

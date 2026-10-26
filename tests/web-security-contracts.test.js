@@ -131,6 +131,15 @@ test("source extraction supports PDF, Word, and both Excel formats", () => {
   assert.match(source, /MAX_EXTRACTABLE_BYTES = 25 \* 1024 \* 1024/);
 });
 
+test("recommendation worker minimizes prompt data and limits usage", () => {
+  const source = read("supabase/functions/recommend-source/index.ts");
+  assert.match(source, /redactSensitiveData/);
+  assert.match(source, /redacted email/);
+  assert.match(source, /MAX_RUNS_PER_ORG_PER_WINDOW/);
+  assert.match(source, /RATE_WINDOW_MINUTES/);
+  assert.match(source, /429/);
+});
+
 test("recommendation worker is authenticated, cited, and proposed-only", () => {
   const source = read("supabase/functions/recommend-source/index.ts");
   assert.match(source, /auth\.getUser\(\)/);
