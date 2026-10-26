@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600&display=swap");
 :root {
   --ink: #17212b;
   --muted: #6e7b87;
@@ -196,3 +197,59 @@ a.tab { text-decoration: none; display: inline-block; }
 .tab:hover {
   color: var(--blue);
 }
+
+/* ===== 2026 Quiet Luxury layer ===== */
+:root {
+  --ink: #1c1b19; --muted: #8a857c; --line: #e8e3da; --paper: #f5f2ec; --white: #fbfaf7;
+  --navy: #1c1b19; --blue: #5b5a55; --gold: #a8875a; --green: #6f7a62;
+  --shadow: 0 1px 0 rgba(28,27,25,.03), 0 24px 48px -32px rgba(28,27,25,.18);
+  --serif: "Cormorant Garamond", "Times New Roman", serif;
+  font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+}
+body { background: var(--paper); -webkit-font-smoothing: antialiased; letter-spacing: .005em; }
+.shell { max-width: 1240px; padding-top: 56px; }
+h1, h2, .hero-card h2 { font-family: var(--serif); font-weight: 500; letter-spacing: -.015em; }
+h1 { font-size: clamp(42px, 6vw, 72px); line-height: .98; }
+h2 { font-size: 30px; }
+h3 { font-weight: 600; letter-spacing: -.005em; }
+.eyebrow, .brand-lockup small, .event-status { font-weight: 600; letter-spacing: .28em; text-transform: uppercase; font-size: 10px; color: var(--muted); }
+.lede { font-size: 15px; line-height: 1.7; color: var(--muted); }
+.hero-card, .trust-card, .metric, .attention-card, .review-card, .event-panel, .connector-row, .source-item, .calendar-list > div, .empty {
+  background: var(--white); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow);
+  transition: border-color .4s ease, transform .4s ease;
+}
+.metric:hover, .attention-card:hover, .review-card:hover, .source-item:hover { border-color: #cfc6b6; transform: translateY(-1px); }
+.attention-card { border-left: 1px solid var(--line); }
+.hero-card, .hero-panel { background: #1c1b19; color: #f5f2ec; border-color: #1c1b19; }
+.hero-card p { color: #b7b0a4; }
+.hero-card .eyebrow { color: #a8875a; }
+.metric strong, .event-progress strong { font-family: var(--serif); font-weight: 500; font-size: 40px; color: var(--ink); }
+.primary, .secondary, .approve, .reject { border-radius: 0; text-transform: uppercase; letter-spacing: .18em; font-size: 11px; font-weight: 600; padding: 14px 22px; transition: all .3s ease; }
+.primary, .primary:hover { background: var(--ink); color: var(--paper); box-shadow: none; border: 1px solid var(--ink); }
+.primary:hover { background: transparent; color: var(--ink); }
+.hero-card .primary { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+.secondary { background: transparent; border: 1px solid var(--ink); color: var(--ink); }
+.approve { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.reject { background: transparent; color: var(--ink); border-color: var(--line); }
+.mode-pill, .status-chip, .tag, .tag.gold { border-radius: 0; background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 10px; }
+.pulse { background: var(--gold); }
+.count { background: var(--ink); color: var(--paper); }
+.notice { background: transparent; border-left: 1px solid var(--gold); color: var(--ink); }
+.notice span { color: var(--muted); }
+.tabs { gap: 32px; border-bottom-color: var(--line); }
+.tab { font-weight: 500; font-size: 13px; letter-spacing: .04em; color: var(--muted); }
+.tab:hover { color: var(--ink); }
+.tab.active { color: var(--ink); border-bottom: 1px solid var(--ink); }
+.topbar::after { display: none; }
+.brand-lockup img { background: transparent; filter: grayscale(.25) contrast(1.05); }
+.brand-lockup span { font-weight: 600; color: var(--ink); }
+.text-button { color: var(--ink); text-transform: uppercase; letter-spacing: .16em; font-weight: 600; font-size: 10px; border-bottom: 1px solid var(--gold); padding-bottom: 2px; }
+.progress { height: 2px; background: var(--line); }
+.progress span { background: var(--gold); }
+.trust-ring { border-width: 2px; border-color: var(--line); border-top-color: var(--gold); }
+.trust-ring span { font-family: var(--serif); font-weight: 500; font-size: 32px; }
+.evidence { background: var(--paper); border-radius: 0; border-left: 1px solid var(--gold); }
+.source-icon, .connector-logo { border-radius: 0; background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+input, select, textarea { font: inherit; border-radius: 0 !important; border: 1px solid var(--line); background: var(--white); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink); }
+::selection { background: #e6dccb; }

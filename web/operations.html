@@ -6,29 +6,29 @@
     <title>Eagle Academy · People & commitments</title>
     <link rel="stylesheet" href="./styles.css" />
     <style>
-      .operations-card { max-width: 1080px; margin: 48px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+      .operations-card { max-width: 1080px; margin: 48px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); }
       .auth-view.hidden { display: none; }
-      .setup-note { padding: 12px; color: #755821; background: #fffaf0; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
+      .setup-note { padding: 12px; color: #6b5a3e; background: #f3ede2; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
       .status { min-height: 22px; margin-top: 18px; color: var(--muted); font-size: 13px; }
       .status.error { color: #9b4c4c; }
       .status.success { color: var(--green); }
-      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #f1f8f3; border-radius: 10px; font-size: 13px; }
+      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #eeefe8; border-radius: 4px; font-size: 13px; }
       .operations-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 32px; }
       .operations-actions a { text-decoration: none; }
       .operations-grid { display: grid; grid-template-columns: 1fr 1.35fr; gap: 18px; margin-top: 18px; }
-      .panel { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfa; }
+      .panel { padding: 20px; border: 1px solid var(--line); border-radius: 4px; background: #f5f2ec; }
       .panel h3 { margin-bottom: 4px; }
       .panel-subtitle { color: var(--muted); font-size: 12px; }
       .person-list, .commitment-list { display: grid; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
-      .person-item, .commitment-item { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); }
+      .person-item, .commitment-item { padding: 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--white); }
       .person-item { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
       .person-name, .commitment-title { font-weight: 750; }
       .person-email, .commitment-meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
       .commitment-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
-      .tag { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: #eef2ed; color: var(--ink); font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
-      .tag.in_progress, .tag.accepted { background: #fff4d7; color: #755821; }
-      .tag.completed { background: #e5f3e8; color: #2e6841; }
-      .tag.blocked, .tag.cancelled { background: #fbe8e8; color: #8c4242; }
+      .tag { display: inline-flex; width: fit-content; padding: 4px 8px; border-radius: 999px; background: #f5f2ec; color: var(--ink); font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+      .tag.in_progress, .tag.accepted { background: #f3ede2; color: #6b5a3e; }
+      .tag.completed { background: #eeefe8; color: #4f5946; }
+      .tag.blocked, .tag.cancelled { background: #f4ebe6; color: #8c4242; }
       .empty { color: var(--muted); font-size: 13px; line-height: 1.5; }
       @media (max-width: 780px) { .operations-grid { grid-template-columns: 1fr; } .commitment-top { display: grid; } }
     </style>
