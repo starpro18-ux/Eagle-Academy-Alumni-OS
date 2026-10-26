@@ -5,7 +5,7 @@ This document is the handoff for rebuilding the current Eagle Academy Alumni OS 
 ## Source of truth
 
 - GitHub repository: https://github.com/starpro18-ux/Eagle-Academy-Alumni-OS
-- Main commit: https://github.com/starpro18-ux/Eagle-Academy-Alumni-OS/commit/370b8f5aa01c60c20a4fb469960af656ab052b26
+- Main commit: https://github.com/starpro18-ux/Eagle-Academy-Alumni-OS/commit/d5e7dc64b5b5189a9de0395affeda8873dc9f761
 - Supabase project URL: https://dcdbsfugesmpweeqospi.supabase.co
 - Supabase project ref: `dcdbsfugesmpweeqospi`
 
@@ -56,19 +56,19 @@ The live database has 19 public tables, all with RLS enabled. The applied migrat
 9. `harden_bootstrap_organization`
 10. `secure_member_administration`
 
-Current production data is intentionally empty:
+The original handoff snapshot was intentionally empty. The current pilot snapshot has one organization, one active membership, three source documents, one completed extraction, fourteen fragments, fourteen evidence records, one commitment, one event, and no recommendations yet.
 
 - authenticated users: 0
 - organizations: 0
 - organization memberships: 0
-- source documents: 0
-- source fragments: 0
-- evidence: 0
+- source documents: 3
+- source fragments: 14
+- evidence: 14
 - meetings: 0
-- commitments: 0
-- events: 0
+- commitments: 1
+- events: 1
 - recommendations: 0
-- audit events: 0
+- audit events: recorded by governed write paths
 
 Security status:
 
