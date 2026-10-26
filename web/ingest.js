@@ -30,6 +30,8 @@ const sourceFile = document.querySelector("#source-file");
 const sourceList = document.querySelector("#source-list");
 const signedInEmail = document.querySelector("#signed-in-email");
 const organizationName = document.querySelector("#organization-name");
+let canExtract = false;
+let organizationId = null;
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -115,10 +117,40 @@ async function loadSources(supabase, organizationId) {
     const title = document.createElement("div");
     title.className = "source-title";
     title.textContent = source.title;
+    const controls = document.createElement("div");
+    controls.className = "source-controls";
     const meta = document.createElement("div");
     meta.className = "source-meta";
     meta.textContent = `${source.extraction_status} · ${source.mime_type || "unknown"} · ${formatDate(source.created_at)}`;
-    item.append(title, meta);
+    controls.append(meta);
+    if (source.extraction_status === "pending" && canExtract) {
+      const extractButton = document.createElement("button");
+      extractButton.type = "button";
+      extractButton.className = "secondary extract-button";
+      extractButton.textContent = "Extract text";
+      extractButton.addEventListener("click", async () => {
+        extractButton.disabled = true;
+        setStatus("Extracting source text…");
+        const { data, error } = await supabase.functions.invoke("extract-source", {
+          body: { source_document_id: source.id },
+        });
+        if (error) {
+          setStatus(error.message || "Source extraction failed.", "error");
+          extractButton.disabled = false;
+          return;
+        }
+        if (data?.error) {
+          setStatus(data.error, "error");
+          extractButton.disabled = false;
+          await loadSources(supabase, organizationId);
+          return;
+        }
+        setStatus(`${data.fragments_created} source fragment${data.fragments_created === 1 ? "" : "s"} and ${data.evidence_created} evidence record${data.evidence_created === 1 ? "" : "s"} created.`, "success");
+        await loadSources(supabase, organizationId);
+      });
+      controls.append(extractButton);
+    }
+    item.append(title, controls);
     sourceList.append(item);
   }
 }
@@ -171,6 +203,8 @@ async function start() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Your session expired. Sign in again.");
       const workspace = await loadWorkspace(supabase, user.id);
+      organizationId = workspace.organization.id;
+      canExtract = CONTRIBUTOR_ROLES.has(workspace.membership.role);
       if (!CONTRIBUTOR_ROLES.has(workspace.membership.role)) {
         throw new Error("Your organization role is read-only. Ask an owner or leader for contributor access.");
       }
@@ -219,6 +253,8 @@ async function start() {
     try {
       setStatus("Checking organization membership…");
       const workspace = await loadWorkspace(supabase, session.user.id);
+      organizationId = workspace.organization.id;
+      canExtract = CONTRIBUTOR_ROLES.has(workspace.membership.role);
       signedInEmail.textContent = session.user.email || "authenticated user";
       organizationName.textContent = `${workspace.organization.name} · ${workspace.membership.role}`;
       show(appView);

@@ -17,12 +17,14 @@
       .status.error { color: #9b4c4c; }
       .status.success { color: var(--green); }
       .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #eeefe8; border-radius: 4px; font-size: 13px; }
+      .source-controls { display: grid; justify-items: end; gap: 7px; margin-left: auto; }
+      .extract-button { white-space: nowrap; }
       .source-list { display: grid; gap: 10px; margin-top: 28px; padding: 0; list-style: none; }
       .source-item { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px; }
       .source-title { font-weight: 700; overflow-wrap: anywhere; }
       .source-meta { color: var(--muted); font-size: 12px; text-align: right; }
       .empty { color: var(--muted); font-size: 13px; }
-      @media (max-width: 640px) { .source-item { display: grid; } .source-meta { text-align: left; } }
+      @media (max-width: 640px) { .source-item { display: grid; } .source-controls { justify-items: start; margin-left: 0; } .source-meta { text-align: left; } }
     </style>
   </head>
   <body>
@@ -70,7 +72,7 @@
           <div class="signed-in"><span>Signed in as <strong id="signed-in-email"></strong><br /><small id="organization-name"></small></span><button id="sign-out" class="text-button" type="button">Sign out</button></div>
           <p class="eyebrow" style="margin-top: 28px;">PRIVATE SOURCE VAULT</p>
           <h2>Add a source document</h2>
-          <p class="subtle">PDF, Word, Excel, CSV, and plain-text files up to 50 MB. Files are stored under an organization-scoped path and remain private.</p>
+          <p class="subtle">PDF, Word, Excel, CSV, and plain-text files up to 50 MB. Text and CSV files can be extracted into evidence now; other formats remain safely pending.</p>
           <form id="upload-form" class="form-stack">
             <label for="source-file">Source file</label>
             <input id="source-file" name="source_file" type="file" accept=".pdf,.docx,.xlsx,.xls,.txt,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/plain,text/csv" required />
