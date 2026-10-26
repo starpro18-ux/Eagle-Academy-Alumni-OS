@@ -76,6 +76,44 @@ Deno.serve(async (request) => {
     return json({ error: "You do not have permission to generate recommendations for this organization." }, 403);
   }
 
+  const { data: agentRun, error: agentRunError } = await adminClient
+    .from("agent_runs")
+    .insert({
+      organization_id: source.organization_id,
+      agent_name: "eaaa-recommendation-agent",
+      agent_version: "recommend-v2",
+      input_document_ids: [source.id],
+      status: "running",
+    })
+    .select("id")
+    .single();
+  if (agentRunError || !agentRun) return json({ error: "The recommendation run could not be started." }, 500);
+
+  const finishAgentRun = async (runStatus, errorSummary = "", outputRecommendationIds = []) => {
+    const { error } = await adminClient
+      .from("agent_runs")
+      .update({
+        status: runStatus,
+        error_summary: errorSummary || null,
+        output_recommendation_ids: outputRecommendationIds,
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", agentRun.id);
+    if (error) console.error("agent_run_update_failed", error.message);
+  };
+
+  const recordAudit = async (action, entityType, entityId, metadata) => {
+    const { error } = await adminClient.from("audit_events").insert({
+      organization_id: source.organization_id,
+      actor_user_id: user.id,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      metadata,
+    });
+    if (error) console.error("audit_event_write_failed", error.message);
+  };
+
   try {
     const { data: fragments, error: fragmentError } = await adminClient
       .from("source_fragments")
@@ -85,7 +123,7 @@ Deno.serve(async (request) => {
       .order("created_at", { ascending: true })
       .limit(MAX_EVIDENCE);
     if (fragmentError) throw fragmentError;
-    if (!fragments?.length) return json({ error: "This source has no extracted evidence yet." }, 422);
+    if (!fragments?.length) throw new Error("This source has no extracted evidence yet.");
 
     const evidence = fragments.map((fragment, index) => ({
       index,
@@ -174,7 +212,7 @@ Deno.serve(async (request) => {
         status: "proposed",
         risk_class: recommendation.risk_class,
         agent_name: "eaaa-recommendation-agent",
-        agent_version: "recommend-v1",
+        agent_version: "recommend-v2",
         policy_version: "eaaa-mission-v1",
         uncertainty: String(recommendation.uncertainty).slice(0, 1200),
       })
@@ -189,8 +227,22 @@ Deno.serve(async (request) => {
     const { error: citationError } = await adminClient.from("recommendation_citations").insert(citations);
     if (citationError) throw citationError;
 
-    return json({ recommendation: created, citations_created: citations.length });
+    await finishAgentRun("completed", "", [created.id]);
+    await recordAudit("recommendation.generated", "recommendation", created.id, {
+      agent_run_id: agentRun.id,
+      source_document_id: source.id,
+      citations_created: citations.length,
+      policy_version: "eaaa-mission-v1",
+    });
+
+    return json({ recommendation: created, citations_created: citations.length, agent_run_id: agentRun.id });
   } catch (error) {
-    return json({ error: errorMessage(error) }, 500);
+    const summary = errorMessage(error);
+    await finishAgentRun("failed", summary);
+    await recordAudit("recommendation.generation_failed", "source_document", source.id, {
+      agent_run_id: agentRun.id,
+      error: summary.slice(0, 400),
+    });
+    return json({ error: summary }, 500);
   }
 });
