@@ -93,6 +93,39 @@ async function loadWorkspace(supabase, userId) {
   return { membership, organization };
 }
 
+async function loadEvidencePreview(supabase, source, target) {
+  target.textContent = "Loading extracted evidence…";
+  const { data, error } = await supabase
+    .from("source_fragments")
+    .select("id, locator, content")
+    .eq("organization_id", organizationId)
+    .eq("source_document_id", source.id)
+    .order("locator", { ascending: true });
+
+  if (error) throw error;
+  target.replaceChildren();
+
+  if (!data?.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty";
+    empty.textContent = "No evidence fragments were created for this source.";
+    target.append(empty);
+    return;
+  }
+
+  for (const fragment of data) {
+    const article = document.createElement("article");
+    article.className = "evidence-fragment";
+    const locator = document.createElement("span");
+    locator.className = "evidence-locator";
+    locator.textContent = fragment.locator || "Evidence";
+    const content = document.createElement("p");
+    content.textContent = fragment.content;
+    article.append(locator, content);
+    target.append(article);
+  }
+}
+
 async function loadSources(supabase, organizationId) {
   const { data, error } = await supabase
     .from("source_documents")
@@ -145,6 +178,27 @@ async function loadSources(supabase, organizationId) {
       });
       controls.append(extractButton);
     }
+    if (source.extraction_status === "complete") {
+      const details = document.createElement("details");
+      details.className = "source-evidence";
+      const summary = document.createElement("summary");
+      summary.textContent = "View extracted evidence";
+      const preview = document.createElement("div");
+      preview.className = "evidence-preview";
+      details.append(summary, preview);
+      details.addEventListener("toggle", async () => {
+        if (!details.open || details.dataset.loaded === "true") return;
+        details.dataset.loaded = "true";
+        try {
+          await loadEvidencePreview(supabase, source, preview);
+        } catch (error) {
+          details.dataset.loaded = "";
+          preview.textContent = error.message || "Evidence could not be loaded.";
+        }
+      });
+      item.append(details);
+    }
+
     item.append(title, controls);
     sourceList.append(item);
   }
