@@ -6,21 +6,21 @@
     <title>Eagle Academy · Workspace</title>
     <link rel="stylesheet" href="./styles.css" />
     <style>
-      .workspace-card { max-width: 980px; margin: 48px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+      .workspace-card { max-width: 980px; margin: 48px auto 0; padding: 32px; background: var(--white); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); }
       .auth-view.hidden { display: none; }
-      .setup-note { padding: 12px; color: #755821; background: #fffaf0; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
+      .setup-note { padding: 12px; color: #6b5a3e; background: #f3ede2; border-left: 3px solid var(--gold); font-size: 13px; line-height: 1.5; }
       .status { min-height: 22px; margin-top: 18px; color: var(--muted); font-size: 13px; }
       .status.error { color: #9b4c4c; }
       .status.success { color: var(--green); }
-      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #f1f8f3; border-radius: 10px; font-size: 13px; }
+      .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #eeefe8; border-radius: 4px; font-size: 13px; }
       .workspace-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 32px; }
       .workspace-actions a { text-decoration: none; }
       .kpi-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 24px 0 32px; }
-      .kpi { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #fbfcfa; }
+      .kpi { padding: 16px; border: 1px solid var(--line); border-radius: 4px; background: #f5f2ec; }
       .kpi-label { color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
       .kpi-value { display: block; margin-top: 8px; color: var(--ink); font-size: 28px; font-weight: 750; }
       .source-list { display: grid; gap: 10px; margin-top: 16px; padding: 0; list-style: none; }
-      .source-item { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; }
+      .source-item { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px; }
       .source-title { font-weight: 700; overflow-wrap: anywhere; }
       .source-meta { color: var(--muted); font-size: 12px; text-align: right; }
       .empty { color: var(--muted); font-size: 13px; }
