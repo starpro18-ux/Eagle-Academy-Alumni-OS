@@ -47,7 +47,7 @@ function fragmentText(text) {
 }
 
 function decodeXml(value) {
-  return value.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, """).replace(/&#39;/g, "'");
+  return value.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 }
 
 async function zipText(bytes, filename) {
