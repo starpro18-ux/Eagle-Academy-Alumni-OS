@@ -116,3 +116,15 @@ The next impact skill now connects event objectives to observed outcomes. Contri
 - no outcome when the objective still needs follow-through.
 
 Outcome writes go through the authenticated `record-event-outcome` Edge Function. It validates the event, objective, evidence organization, and contributor membership before inserting the outcome and recording `event.outcome_recorded`. It does not mark outcomes reviewed or trigger operational action.
+
+
+### Leadership intelligence
+
+The Command Center now provides a rules-based leadership pulse across the existing organization model:
+
+- commitments needing ownership, timing, or intervention;
+- recommendations waiting for human review;
+- event objectives without recorded outcomes;
+- source documents still pending or failing extraction.
+
+The pulse is organization-scoped, read-only, and explainable. It points leaders to the next operating surface without making decisions or changing records.
