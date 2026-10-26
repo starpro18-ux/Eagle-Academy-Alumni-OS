@@ -55,7 +55,7 @@ test("review queue is read-only and organization-scoped", () => {
   assert.match(source, /eq\("organization_id", organizationId\)/);
   assert.match(source, /from\("recommendations"\)/);
   assert.match(source, /from\("commitments"\)/);
-  assert.match(source, /from\("events"\)/);
+  assert.match(source, /count\(supabase, "events"/);
   assert.match(source, /from\("source_documents"\)/);
   assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
 });
