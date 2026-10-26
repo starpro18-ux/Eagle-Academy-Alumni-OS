@@ -23,6 +23,17 @@
       .create-form button { width: fit-content; }
       .write-surface.hidden { display: none; }
       .viewer-note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .outcome-form { display: grid; gap: 11px; margin-top: 16px; }
+      .outcome-form label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; font-weight: 800; }
+      .outcome-form input, .outcome-form textarea, .outcome-form select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 11px; color: var(--ink); background: #fff; font: inherit; }
+      .outcome-form textarea { min-height: 78px; resize: vertical; }
+      .outcome-form button { width: fit-content; }
+      .outcome-form select:disabled { color: var(--muted); background: #f5f2ec; }
+      .outcome-status { display: inline-flex; margin-top: 7px; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+      .outcome-status.on-track { color: #4f5946; background: #eeefe8; }
+      .outcome-status.below-target { color: #8c4242; background: #f4ebe6; }
+      .outcome-status.no-target, .outcome-status.unreviewed { color: #6b5a3e; background: #f3ede2; }
+      .outcome-evidence { display: block; color: var(--muted); margin-top: 6px; font-size: 11px; line-height: 1.4; }
       .event-list { display: grid; gap: 16px; margin-top: 18px; }
       .event-item { padding: 20px; border: 1px solid var(--line); border-radius: 4px; background: #f5f2ec; }
       .event-top { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
@@ -121,6 +132,19 @@
               </div>
               <label for="objective-method">Measurement method <span>(optional)</span><input id="objective-method" name="measurement_method" maxlength="240" placeholder="Registration count from the event roster" /></label>
               <button class="primary" type="submit">Create event plan <span>→</span></button>
+            </form>
+          </section>
+          <section id="outcome-panel" class="create-panel write-surface">
+            <p class="eyebrow">SERVICE & OUTCOMES</p>
+            <h3>Record an outcome</h3>
+            <p class="subtle">Tie what happened to an objective and, when available, the evidence that supports it. Outcomes remain unreviewed until a leader validates them.</p>
+            <form id="outcome-form" class="outcome-form">
+              <label for="outcome-event">Event<select id="outcome-event" name="event_id" required><option value="">Choose an event</option></select></label>
+              <label for="outcome-objective">Objective<select id="outcome-objective" name="objective_id" required disabled><option value="">Choose an event first</option></select></label>
+              <label for="outcome-actual">Actual result <span>(optional)</span><input id="outcome-actual" name="actual" type="number" step="any" placeholder="82" /></label>
+              <label for="outcome-narrative">What happened?<textarea id="outcome-narrative" name="narrative" maxlength="3000" required placeholder="Describe the result, context, and what the team learned."></textarea></label>
+              <label for="outcome-evidence">Supporting evidence <span>(optional)</span><select id="outcome-evidence" name="source_evidence_id"><option value="">No evidence attached</option></select></label>
+              <button class="primary" type="submit">Record outcome <span>→</span></button>
             </form>
           </section>
           <p id="viewer-note" class="viewer-note write-surface hidden">Viewer access can review events but cannot create plans.</p>
