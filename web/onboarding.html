@@ -18,6 +18,9 @@
       .status.success { color: var(--green); }
       .signed-in { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px; background: #eeefe8; border-radius: 4px; font-size: 13px; }
       .next-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; align-items: center; }
+      .auth-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0 0; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+      .auth-divider::before, .auth-divider::after { content: ""; height: 1px; flex: 1; background: var(--line); }
+      .pilot-note { color: var(--muted); font-size: 12px; line-height: 1.5; margin-top: 8px; }
     </style>
   </head>
   <body>
@@ -64,12 +67,22 @@
 
         <div id="sign-in-view" class="auth-view hidden">
           <p class="eyebrow">STEP 1</p>
-          <h2>Sign in with a magic link</h2>
-          <p class="subtle">The link returns you here. No password or secret key is handled by this page.</p>
+          <h2>Sign in to begin</h2>
+          <p class="subtle">Use the normal magic link or the password fallback for a confirmed pilot account.</p>
           <form id="sign-in-form" class="form-stack">
             <label for="email">Email address</label>
             <input id="email" name="email" type="email" autocomplete="email" required placeholder="owner@example.org" />
             <button class="primary" type="submit">Send magic link <span>→</span></button>
+          </form>
+
+          <div class="auth-divider">Pilot fallback</div>
+          <p class="pilot-note">Use this only with a confirmed test user created in Supabase Authentication. It does not bypass Supabase authorization or RLS.</p>
+          <form id="password-form" class="form-stack">
+            <label for="password-email">Email address</label>
+            <input id="password-email" name="email" type="email" autocomplete="username" required placeholder="pilot@example.org" />
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required minlength="6" placeholder="Your pilot password" />
+            <button class="secondary" type="submit">Sign in with password <span>→</span></button>
           </form>
         </div>
 

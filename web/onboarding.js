@@ -6,6 +6,7 @@ const signInView = document.querySelector("#sign-in-view");
 const bootstrapView = document.querySelector("#bootstrap-view");
 const status = document.querySelector("#status");
 const signInForm = document.querySelector("#sign-in-form");
+const passwordForm = document.querySelector("#password-form");
 const bootstrapForm = document.querySelector("#bootstrap-form");
 const signedInEmail = document.querySelector("#signed-in-email");
 const signOutButton = document.querySelector("#sign-out");
@@ -88,6 +89,21 @@ signInForm.addEventListener("submit", async (event) => {
     return;
   }
   setStatus("Check your inbox for the sign-in link.", "success");
+});
+
+passwordForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(passwordForm);
+  setStatus("Signing in with your confirmed pilot account…");
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: form.get("email"),
+    password: form.get("password"),
+  });
+  if (error) {
+    setStatus(error.message, "error");
+    return;
+  }
+  await renderSession(data.session);
 });
 
 bootstrapForm.addEventListener("submit", async (event) => {
