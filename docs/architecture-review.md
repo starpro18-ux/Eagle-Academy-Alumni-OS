@@ -148,3 +148,26 @@ The Sources surface now lets authenticated organization members expand a complet
 ### Recommendation provenance
 
 Review cards now let leaders expand the cited claims behind a proposal. The UI reads evidence through the authenticated, organization-scoped client and renders claims as text; the existing review worker remains the only path for approval, rejection, or correction.
+
+
+## Frontend modernization audit
+
+### Preserved production surface
+
+- The production UI remains the static `web/` application served at its existing HTML routes.
+- Supabase magic-link authentication, organization membership checks, RLS, private source storage, extraction, recommendation generation, and governed review workers remain unchanged.
+- The Eagle Academy seal remains the authoritative brand asset.
+
+### Modernization completed
+
+- Shared web tokens now use deep ink, warm ivory, muted gold, and restrained sage states derived from the seal and existing UI.
+- Decorative gradients were removed from the production shell.
+- All shared tabs remain touch-friendly and horizontally navigable on small screens without hiding routes.
+- Keyboard focus indicators, status colors, disabled states, and reduced-motion handling were added.
+- The demo-backed route is labeled `Prototype` so demo data is not confused with production data.
+- Sources expose extracted evidence previews; Review exposes cited claims before governance decisions.
+- Source and review copy now reflects the live extraction/recommendation workflow.
+
+### Deliberately not invented
+
+An alumni directory, chapters, mentorship marketplace, communications center, fundraising, and opportunity marketplace are future product domains—not decorative empty pages. They should be designed only after the organization defines the required privacy model, ownership, and workflows.
