@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
+import JSZip from "https://esm.sh/jszip@3.10.1";
+import * as pdfjsLib from "https://esm.sh/pdfjs-dist@4.10.38/legacy/build/pdf.mjs";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,8 +10,8 @@ const corsHeaders = {
 };
 
 const CONTRIBUTOR_ROLES = new Set(["owner", "leader", "committee_lead", "contributor"]);
-const EXTRACTABLE_MIME_TYPES = new Set(["text/plain", "text/csv"]);
-const MAX_EXTRACTABLE_BYTES = 5 * 1024 * 1024;
+const EXTRACTABLE_MIME_TYPES = new Set(["text/plain", "text/csv", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"]);
+const MAX_EXTRACTABLE_BYTES = 25 * 1024 * 1024;
 const MAX_FRAGMENTS = 500;
 const MAX_FRAGMENT_CHARS = 4000;
 
@@ -42,6 +44,65 @@ function fragmentText(text) {
     }
   }
   return fragments;
+}
+
+function decodeXml(value) {
+  return value.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, """).replace(/&#39;/g, "'");
+}
+
+async function zipText(bytes, filename) {
+  const zip = await JSZip.loadAsync(bytes);
+  const entry = zip.file(filename);
+  if (!entry) throw new Error("The office document is missing " + filename + ".");
+  return entry.async("text");
+}
+
+async function extractDocx(bytes) {
+  const xml = await zipText(bytes, "word/document.xml");
+  return decodeXml(xml.replace(/<w:tab\s*\/?\s*>/g, "\t").replace(/<w:br\s*\/?\s*>/g, "\n").replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, ""));
+}
+
+async function extractXlsx(bytes) {
+  const zip = await JSZip.loadAsync(bytes);
+  const sharedEntry = zip.file("xl/sharedStrings.xml");
+  const sharedStrings = sharedEntry ? (await sharedEntry.async("text")).match(/<t[^>]*>([\\s\\S]*?)<\\/t>/g)?.map((value) => decodeXml(value.replace(/<[^>]+>/g, ""))) ?? [] : [];
+  const sheet = zip.file("xl/worksheets/sheet1.xml");
+  if (!sheet) throw new Error("The spreadsheet has no first worksheet.");
+  const xml = await sheet.async("text");
+  const rows = [];
+  for (const row of xml.matchAll(/<row[^>]*>([\\s\\S]*?)<\\/row>/g)) {
+    const cells = [];
+    for (const cell of row[1].matchAll(/<c([^>]*)>([\\s\\S]*?)<\\/c>/g)) {
+      const attributes = cell[1];
+      const value = cell[2].match(/<v[^>]*>([\\s\\S]*?)<\\/v>/)?.[1] ?? cell[2].match(/<t[^>]*>([\\s\\S]*?)<\\/t>/)?.[1] ?? "";
+      const isShared = /t="s"/.test(attributes);
+      cells.push(decodeXml(isShared ? (sharedStrings[Number(value)] ?? "") : value));
+    }
+    if (cells.length) rows.push(cells.join(" | "));
+  }
+  return rows.join("\n");
+}
+
+async function extractPdf(bytes) {
+  const document = await pdfjsLib.getDocument({ data: bytes, disableWorker: true }).promise;
+  const pages = [];
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+    const page = await document.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const text = content.items.map((item) => typeof item.str === "string" ? item.str : "").join(" ").trim();
+    if (text) pages.push("Page " + pageNumber + "\n" + text);
+    if (pages.length >= 100) break;
+  }
+  return pages.join("\n\n");
+}
+
+async function extractText(file, mimeType) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (mimeType === "text/plain" || mimeType === "text/csv") return new TextDecoder().decode(bytes);
+  if (mimeType === "application/pdf") return extractPdf(bytes);
+  if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return extractDocx(bytes);
+  if (mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || mimeType === "application/vnd.ms-excel") return extractXlsx(bytes);
+  throw new Error("This file type is not supported by the extraction worker.");
 }
 
 Deno.serve(async (request) => {
@@ -103,9 +164,7 @@ Deno.serve(async (request) => {
   };
 
   if (!source.storage_path) return fail("This source has no private storage path.");
-  if (!EXTRACTABLE_MIME_TYPES.has(source.mime_type)) {
-    return fail("The first extraction pass supports plain text and CSV files. PDF, Word, and Excel extraction is next.");
-  }
+  if (!EXTRACTABLE_MIME_TYPES.has(source.mime_type)) return fail("This file type is not supported by the extraction worker.");
 
   try {
     const { data: file, error: downloadError } = await adminClient.storage
@@ -113,10 +172,10 @@ Deno.serve(async (request) => {
       .download(source.storage_path);
     if (downloadError || !file) throw downloadError ?? new Error("The source file could not be downloaded.");
     if (file.size > MAX_EXTRACTABLE_BYTES) {
-      return await fail("This text source is larger than the 5 MB extraction limit.");
+      return await fail("This source is larger than the 25 MB extraction limit.");
     }
 
-    const text = await file.text();
+    const text = await extractText(file, source.mime_type);
     const fragments = fragmentText(text);
     if (!fragments.length) return await fail("The source file did not contain extractable text.");
 
@@ -144,8 +203,8 @@ Deno.serve(async (request) => {
       source_fragment_id: fragment.id,
       label: "claimed",
       claim: fragment.content,
-      extracted_by: "text-extractor",
-      model_version: "text-v1",
+      extracted_by: "multi-format-extractor",
+      model_version: "extract-v2",
     }));
     const { error: evidenceError } = await adminClient.from("evidence").insert(evidenceRows);
     if (evidenceError) throw evidenceError;
