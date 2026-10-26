@@ -141,6 +141,36 @@ test("recommendation worker is authenticated, cited, and proposed-only", () => {
   assert.match(source, /from\("recommendation_citations"\)/);
 });
 
+test("recommendation review is leader-gated and audited", () => {
+  const source = read("supabase/functions/review-recommendation/index.ts");
+  assert.match(source, /auth\.getUser\(\)/);
+  assert.match(source, /REVIEWER_ROLES/);
+  assert.match(source, /from\("organization_memberships"\)/);
+  assert.match(source, /from\("recommendation_reviews"\)/);
+  assert.match(source, /from\("recommendations"\)/);
+  assert.match(source, /recommendation\.reviewed/);
+  assert.match(source, /audit_events/);
+});
+
+test("recommendation generation records agent runs and audit events", () => {
+  const source = read("supabase/functions/recommend-source/index.ts");
+  assert.match(source, /from\("agent_runs"\)/);
+  assert.match(source, /status: "running"/);
+  assert.match(source, /finishAgentRun\("completed"/);
+  assert.match(source, /finishAgentRun\("failed"/);
+  assert.match(source, /from\("audit_events"\)/);
+  assert.match(source, /recommendation\.generated/);
+});
+
+test("review UI exposes governed decisions without direct database writes", () => {
+  const source = read("web/review.js");
+  assert.match(source, /functions\.invoke\("review-recommendation"/);
+  assert.match(source, /approved/);
+  assert.match(source, /rejected/);
+  assert.match(source, /corrected/);
+  assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
+});
+
 test("source extraction stays authenticated and organization-scoped", () => {
   const source = read("supabase/functions/extract-source/index.ts");
 
