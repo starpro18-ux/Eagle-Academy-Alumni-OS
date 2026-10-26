@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 import JSZip from "https://esm.sh/jszip@3.10.1";
 import * as pdfjsLib from "https://esm.sh/pdfjs-dist@4.10.38/legacy/build/pdf.mjs";
+import * as XLSX from "https://esm.sh/xlsx@0.18.5";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,24 +64,12 @@ async function extractDocx(bytes) {
 }
 
 async function extractXlsx(bytes) {
-  const zip = await JSZip.loadAsync(bytes);
-  const sharedEntry = zip.file("xl/sharedStrings.xml");
-  const sharedStrings = sharedEntry ? (await sharedEntry.async("text")).match(/<t[^>]*>([\s\S]*?)<\/t>/g)?.map((value) => decodeXml(value.replace(/<[^>]+>/g, ""))) ?? [] : [];
-  const sheet = zip.file("xl/worksheets/sheet1.xml");
-  if (!sheet) throw new Error("The spreadsheet has no first worksheet.");
-  const xml = await sheet.async("text");
-  const rows = [];
-  for (const row of xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)) {
-    const cells = [];
-    for (const cell of row[1].matchAll(/<c([^>]*)>([\s\S]*?)<\/c>/g)) {
-      const attributes = cell[1];
-      const value = cell[2].match(/<v[^>]*>([\s\S]*?)<\/v>/)?.[1] ?? cell[2].match(/<t[^>]*>([\s\S]*?)<\/t>/)?.[1] ?? "";
-      const isShared = /t="s"/.test(attributes);
-      cells.push(decodeXml(isShared ? (sharedStrings[Number(value)] ?? "") : value));
-    }
-    if (cells.length) rows.push(cells.join(" | "));
-  }
-  return rows.join("\n");
+  const workbook = XLSX.read(bytes, { type: "array", cellDates: true });
+  const sheets = workbook.SheetNames.slice(0, 20).map((sheetName) => {
+    const sheet = workbook.Sheets[sheetName];
+    return "Sheet: " + sheetName + "\n" + XLSX.utils.sheet_to_csv(sheet, { blankrows: false });
+  });
+  return sheets.join("\n\n");
 }
 
 async function extractPdf(bytes) {
