@@ -133,3 +133,8 @@ The pulse is organization-scoped, read-only, and explainable. It points leaders 
 ### Event editing
 
 Event plans are now editable by contributors through a protected `update-event` Edge Function. The edit path validates organization membership, event dates, allowed status values, and records `event.updated` in the audit trail. This keeps the operating record correct without allowing anonymous or cross-organization changes.
+
+
+### Extraction reliability
+
+PDF extraction now uses the serverless build provided by `unpdf`, which avoids the browser-oriented PDF.js legacy bundle that failed in the Supabase Edge Runtime. Failed source documents are retryable from the Ingest page; a retry clears derived fragments and evidence from the prior attempt before rebuilding them. OCR for scanned/image-only PDFs remains a separate capability.

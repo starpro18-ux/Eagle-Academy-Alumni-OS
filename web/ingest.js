@@ -123,24 +123,19 @@ async function loadSources(supabase, organizationId) {
     meta.className = "source-meta";
     meta.textContent = `${source.extraction_status} · ${source.mime_type || "unknown"} · ${formatDate(source.created_at)}`;
     controls.append(meta);
-    if (source.extraction_status === "pending" && canExtract) {
+    if (["pending", "failed"].includes(source.extraction_status) && canExtract) {
       const extractButton = document.createElement("button");
       extractButton.type = "button";
       extractButton.className = "secondary extract-button";
-      extractButton.textContent = "Extract evidence";
+      extractButton.textContent = source.extraction_status === "failed" ? "Retry extraction" : "Extract evidence";
       extractButton.addEventListener("click", async () => {
         extractButton.disabled = true;
         setStatus("Extracting evidence from source…");
         const { data, error } = await supabase.functions.invoke("extract-source", {
           body: { source_document_id: source.id },
         });
-        if (error) {
-          setStatus(error.message || "Source extraction failed.", "error");
-          extractButton.disabled = false;
-          return;
-        }
-        if (data?.error) {
-          setStatus(data.error, "error");
+        if (error || data?.error) {
+          setStatus(data?.error || error?.message || "Source extraction failed.", "error");
           extractButton.disabled = false;
           await loadSources(supabase, organizationId);
           return;
