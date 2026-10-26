@@ -192,3 +192,10 @@ The build is accepted when:
 - no secrets are committed;
 - the current prototype remains reachable as a clearly labeled reference route;
 - the UI communicates that extraction is pending until a worker is connected.
+
+
+## Institutional design modernization
+
+The static `web/` surface remains the production UI and is being modernized in place. The shared design system uses the existing Eagle seal as the brand anchor with deep ink, warm ivory, muted gold, and restrained sage status colors. It avoids decorative gradients, preserves the current routes and Supabase behavior, adds visible keyboard focus and reduced-motion handling, and keeps the navigation task-oriented.
+
+The demo-backed `web/index.html` route is labeled **Prototype** so it cannot be mistaken for production data. Production source copy now reflects that supported files can be extracted into reviewable evidence. Completed source records expose evidence previews, and recommendation review exposes cited claims before governance decisions.
