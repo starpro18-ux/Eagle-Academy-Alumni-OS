@@ -127,10 +127,10 @@ async function loadSources(supabase, organizationId) {
       const extractButton = document.createElement("button");
       extractButton.type = "button";
       extractButton.className = "secondary extract-button";
-      extractButton.textContent = "Extract text";
+      extractButton.textContent = "Extract evidence";
       extractButton.addEventListener("click", async () => {
         extractButton.disabled = true;
-        setStatus("Extracting source text…");
+        setStatus("Extracting evidence from source…");
         const { data, error } = await supabase.functions.invoke("extract-source", {
           body: { source_document_id: source.id },
         });
