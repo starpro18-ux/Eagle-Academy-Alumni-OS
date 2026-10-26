@@ -192,3 +192,16 @@ test("source extraction stays authenticated and organization-scoped", () => {
   assert.match(source, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(source, /extraction_status: "complete"/);
 });
+
+
+test("accountability intelligence is explainable and status changes are governed", () => {
+  const ui = read("web/operations.js");
+  const worker = read("supabase/functions/update-commitment/index.ts");
+  assert.match(ui, /commitmentHealth/);
+  assert.match(ui, /renderAccountabilityPulse/);
+  assert.match(ui, /functions\.invoke\("update-commitment"/);
+  assert.match(worker, /auth\.getUser\(\)/);
+  assert.match(worker, /CONTRIBUTOR_ROLES/);
+  assert.match(worker, /commitment\.status_changed/);
+  assert.match(worker, /completed_at/);
+});

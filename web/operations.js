@@ -15,6 +15,12 @@ const commitmentForm = document.querySelector("#commitment-form");
 const ownerSelect = document.querySelector("#commitment-owner");
 const writeSurface = document.querySelector("[data-write-surface]");
 const viewerNote = document.querySelector("#viewer-note");
+const attentionCount = document.querySelector("#attention-count");
+const overdueCount = document.querySelector("#overdue-count");
+const blockedCount = document.querySelector("#blocked-count");
+const unassignedCount = document.querySelector("#unassigned-count");
+const dueSoonCount = document.querySelector("#due-soon-count");
+const accountabilityCopy = document.querySelector("#accountability-copy");
 let organizationId = null;
 let currentSession = null;
 let writeEnabled = false;
@@ -131,9 +137,50 @@ function renderPeople(items) {
   }
 }
 
-function renderCommitments(items, people) {
+const COMMITMENT_STATUSES = ["proposed", "accepted", "in_progress", "completed", "blocked", "cancelled"];
+
+function startOfToday() {
+  const value = new Date();
+  value.setHours(0, 0, 0, 0);
+  return value;
+}
+
+function commitmentHealth(commitment) {
+  if (["completed", "cancelled"].includes(commitment.status)) return { label: "Closed", className: "completed", attention: false };
+  if (commitment.status === "blocked") return { label: "Blocked", className: "blocked", attention: true };
+  if (!commitment.owner_id) return { label: "Unassigned", className: "unassigned", attention: true };
+  if (!commitment.due_date) return { label: "No due date", className: "no-due-date", attention: true };
+  const due = new Date(`${commitment.due_date}T00:00:00`);
+  const daysUntilDue = Math.ceil((due.getTime() - startOfToday().getTime()) / 86400000);
+  if (daysUntilDue < 0) return { label: "Overdue", className: "overdue", attention: true };
+  if (daysUntilDue <= 7) return { label: "Due soon", className: "due-soon", attention: true };
+  return { label: "On track", className: "on-track", attention: false };
+}
+
+function renderAccountabilityPulse(items) {
+  const open = items.filter((item) => !["completed", "cancelled"].includes(item.status));
+  const health = open.map(commitmentHealth);
+  const overdue = health.filter((item) => item.className === "overdue").length;
+  const blocked = health.filter((item) => item.className === "blocked").length;
+  const unassigned = health.filter((item) => item.className === "unassigned").length;
+  const dueSoon = health.filter((item) => item.className === "due-soon").length;
+  const attention = health.filter((item) => item.attention).length;
+  attentionCount.textContent = attention;
+  overdueCount.textContent = overdue;
+  blockedCount.textContent = blocked;
+  unassignedCount.textContent = unassigned;
+  dueSoonCount.textContent = dueSoon;
+  accountabilityCopy.textContent = attention
+    ? `${attention} open commitment${attention === 1 ? "" : "s"} need clearer ownership, timing, or intervention.`
+    : open.length
+      ? "Open commitments have an owner, a date, and no current blockers."
+      : "Add a commitment to see the organization’s follow-through health.";
+}
+
+function renderCommitments(items, people, supabase) {
   const names = new Map(people.map((person) => [person.id, person.display_name]));
   commitmentList.replaceChildren();
+  renderAccountabilityPulse(items);
   if (!items.length) {
     commitmentList.append(emptyItem("No commitments have been recorded yet."));
     return;
@@ -147,12 +194,45 @@ function renderCommitments(items, people) {
     const title = document.createElement("div");
     title.className = "commitment-title";
     title.textContent = commitment.title;
+    const health = commitmentHealth(commitment);
     top.append(title, tag(commitment.status));
     const meta = document.createElement("div");
     meta.className = "commitment-meta";
     const owner = names.get(commitment.owner_id) || (commitment.owner_id ? "Owner not in active roster" : "Unassigned");
     meta.textContent = `${owner} · due ${formatDate(commitment.due_date)}`;
-    item.append(top, meta);
+
+    const healthRow = document.createElement("div");
+    healthRow.className = "commitment-health";
+    healthRow.append(tag(health.label));
+    const statusSelect = document.createElement("select");
+    statusSelect.className = "status-control";
+    statusSelect.setAttribute("aria-label", `Update status for ${commitment.title}`);
+    for (const status of COMMITMENT_STATUSES) {
+      const option = document.createElement("option");
+      option.value = status;
+      option.textContent = status.replace("_", " ");
+      option.selected = status === commitment.status;
+      statusSelect.append(option);
+    }
+    statusSelect.disabled = !writeEnabled;
+    statusSelect.addEventListener("change", async () => {
+      const nextStatus = statusSelect.value;
+      statusSelect.disabled = true;
+      setStatus("Updating commitment status…");
+      const { data, error } = await supabase.functions.invoke("update-commitment", {
+        body: { commitment_id: commitment.id, status: nextStatus },
+      });
+      if (error || data?.error) {
+        statusSelect.value = commitment.status;
+        statusSelect.disabled = !writeEnabled;
+        setStatus(error?.message || data?.error || "Commitment update failed.", "error");
+        return;
+      }
+      await renderSession(supabase, currentSession);
+      setStatus("Commitment status updated and logged.", "success");
+    });
+    healthRow.append(statusSelect);
+    item.append(top, meta, healthRow);
     commitmentList.append(item);
   }
 }
@@ -175,7 +255,7 @@ async function renderSession(supabase, session) {
     renderOwnerOptions(data.people);
     setWriteAccess(workspace.membership.role);
     renderPeople(data.people);
-    renderCommitments(data.commitments, data.people);
+    renderCommitments(data.commitments, data.people, supabase);
     show(appView);
     setStatus("");
   } catch (error) {

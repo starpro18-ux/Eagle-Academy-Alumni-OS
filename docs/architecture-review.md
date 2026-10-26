@@ -92,3 +92,15 @@ The system should help leaders answer, at any moment:
 - Which agent outputs are trustworthy enough to use—and why?
 
 Until those questions are answered reliably, more agents would add noise rather than intelligence.
+
+### Accountability intelligence
+
+The first operational intelligence skill is deliberately rules-based and explainable. It does not infer hidden facts or take autonomous action. It reads organization-scoped commitments and surfaces:
+
+- overdue open work;
+- blocked work;
+- commitments without an owner;
+- commitments due within seven days;
+- open work that is currently on track.
+
+Contributors can change commitment status through the authenticated `update-commitment` Edge Function. The worker validates organization membership, sets `completed_at` when appropriate, and records `commitment.status_changed` in `audit_events`. This makes follow-through visible without allowing the system to silently execute work.
