@@ -10,6 +10,8 @@ const corsHeaders = {
 const CONTRIBUTOR_ROLES = new Set(["owner", "leader", "committee_lead", "contributor"]);
 const MAX_EVIDENCE = 80;
 const MAX_CLAIM_CHARS = 1200;
+const MAX_RUNS_PER_ORG_PER_WINDOW = 20;
+const RATE_WINDOW_MINUTES = 10;
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
@@ -17,6 +19,13 @@ function json(body, status = 200) {
 
 function errorMessage(error) {
   return error instanceof Error ? error.message : "Recommendation generation failed.";
+}
+
+function redactSensitiveData(value) {
+  return String(value)
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted email]")
+    .replace(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-])\d{3}[\s.-]\d{4}/g, "[redacted phone]")
+    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, "[redacted identifier]");
 }
 
 Deno.serve(async (request) => {
@@ -76,6 +85,17 @@ Deno.serve(async (request) => {
     return json({ error: "You do not have permission to generate recommendations for this organization." }, 403);
   }
 
+  const windowStart = new Date(Date.now() - RATE_WINDOW_MINUTES * 60 * 1000).toISOString();
+  const { count: recentRunCount, error: recentRunError } = await adminClient
+    .from("agent_runs")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", source.organization_id)
+    .gte("created_at", windowStart);
+  if (recentRunError) return json({ error: "The recommendation usage check failed." }, 500);
+  if ((recentRunCount ?? 0) >= MAX_RUNS_PER_ORG_PER_WINDOW) {
+    return json({ error: "Recommendation generation is temporarily rate-limited for this organization. Try again shortly." }, 429);
+  }
+
   const { data: agentRun, error: agentRunError } = await adminClient
     .from("agent_runs")
     .insert({
@@ -129,7 +149,7 @@ Deno.serve(async (request) => {
       index,
       evidence_id: fragment.id,
       locator: fragment.locator,
-      claim: String(fragment.content ?? "").slice(0, MAX_CLAIM_CHARS),
+      claim: redactSensitiveData(String(fragment.content ?? "")).slice(0, MAX_CLAIM_CHARS),
     }));
 
     const prompt = [
