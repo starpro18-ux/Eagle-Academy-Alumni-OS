@@ -14,7 +14,7 @@ Supported formats:
 
 The function limits extraction to 25 MB, creates organization-scoped paragraph fragments and source-backed `claimed` evidence records, then marks the source document `complete`. Empty files, unsupported formats, malformed office files, and extraction failures are marked `failed`.
 
-The Review page can invoke the `recommend-source` Edge Function for a completed source. That worker sends only organization-scoped extracted evidence to the server-side OpenAI API, stores one `proposed` recommendation, and creates recommendation citations. It never approves, executes, or reverses an action.
+The Review page can invoke the `recommend-source` Edge Function for a completed source. That worker sends only organization-scoped extracted evidence to the server-side OpenAI API, stores one `proposed` recommendation, and creates recommendation citations. It never executes or reverses an action. Organization owners, leaders, and committee leads can now approve, reject, or correct a proposal from the Review page; every decision is stored in recommendation_reviews and recorded in audit_events.
 
 Required Supabase Edge Function secret:
 
