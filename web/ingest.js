@@ -31,6 +31,7 @@ const sourceList = document.querySelector("#source-list");
 const signedInEmail = document.querySelector("#signed-in-email");
 const organizationName = document.querySelector("#organization-name");
 let canExtract = false;
+let organizationId = null;
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -202,6 +203,7 @@ async function start() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Your session expired. Sign in again.");
       const workspace = await loadWorkspace(supabase, user.id);
+      organizationId = workspace.organization.id;
       canExtract = CONTRIBUTOR_ROLES.has(workspace.membership.role);
       if (!CONTRIBUTOR_ROLES.has(workspace.membership.role)) {
         throw new Error("Your organization role is read-only. Ask an owner or leader for contributor access.");
@@ -251,6 +253,7 @@ async function start() {
     try {
       setStatus("Checking organization membership…");
       const workspace = await loadWorkspace(supabase, session.user.id);
+      organizationId = workspace.organization.id;
       canExtract = CONTRIBUTOR_ROLES.has(workspace.membership.role);
       signedInEmail.textContent = session.user.email || "authenticated user";
       organizationName.textContent = `${workspace.organization.name} · ${workspace.membership.role}`;
