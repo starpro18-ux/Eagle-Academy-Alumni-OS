@@ -10,7 +10,7 @@ const read = (relativePath) => readFileSync(join(root, relativePath), "utf8");
 test("browser configuration contains no server secret", () => {
   const config = read("web/config.example.js");
   const configWithoutComments = config.replace(/^\s*\/\/.*$/gm, "");
-  const webSources = ["web/onboarding.js", "web/ingest.js", "web/workspace.js", "web/review.js", "web/integrations.js", "web/operations.js", "web/events.js"]
+  const webSources = ["web/onboarding.js", "web/ingest.js", "web/workspace.js", "web/review.js", "web/integrations.js", "web/operations.js", "web/events.js", "web/command-center.js"]
     .map(read)
     .join("\n");
 
@@ -20,7 +20,7 @@ test("browser configuration contains no server secret", () => {
 });
 
 test("protected pages load runtime config before their modules", () => {
-  for (const page of ["web/onboarding.html", "web/ingest.html", "web/workspace.html", "web/review.html", "web/integrations.html", "web/operations.html", "web/events.html"]) {
+  for (const page of ["web/onboarding.html", "web/ingest.html", "web/workspace.html", "web/review.html", "web/integrations.html", "web/operations.html", "web/events.html", "web/app.html"]) {
     const html = read(page);
     const configIndex = html.indexOf('src="./config.js"');
     const moduleIndex = html.indexOf('type="module"');
@@ -43,7 +43,7 @@ test("source ingestion preserves the private organization-scoped upload contract
 });
 
 test("all authenticated browser modules use the pinned Supabase client", () => {
-  for (const source of ["web/onboarding.js", "web/ingest.js", "web/workspace.js", "web/review.js", "web/integrations.js", "web/operations.js", "web/events.js"].map(read)) {
+  for (const source of ["web/onboarding.js", "web/ingest.js", "web/workspace.js", "web/review.js", "web/integrations.js", "web/operations.js", "web/events.js", "web/command-center.js"].map(read)) {
     assert.match(source, /@supabase\/supabase-js@2\.57\.0/);
   }
 });
@@ -88,5 +88,16 @@ test("events and outcomes are read-only and organization-scoped", () => {
   assert.match(source, /from\("events"\)/);
   assert.match(source, /from\("event_objectives"\)/);
   assert.match(source, /from\("event_outcomes"\)/);
+  assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
+});
+
+
+test("command center is organization-scoped and browser-write free", () => {
+  const source = read("web/command-center.js");
+
+  assert.match(source, /eq\("organization_id", organizationId\)/);
+  assert.match(source, /from\("source_documents"\)/);
+  assert.match(source, /from\("commitments"\)/);
+  assert.match(source, /count\(supabase, "events"/);
   assert.doesNotMatch(source, /\.insert\(|\.update\(|\.delete\(/);
 });
