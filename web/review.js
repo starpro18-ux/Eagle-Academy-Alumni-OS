@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 
 const config = globalThis.EAGLE_SUPABASE_CONFIG ?? {};
 const CONTRIBUTOR_ROLES = new Set(["owner", "leader", "committee_lead", "contributor"]);
+const REVIEWER_ROLES = new Set(["owner", "leader", "committee_lead"]);
 const setupView = document.querySelector("#setup-view");
 const signInView = document.querySelector("#sign-in-view");
 const appView = document.querySelector("#app-view");
@@ -17,6 +18,9 @@ const recommendationSourceSelect = document.querySelector("#recommend-source-sel
 const generateRecommendationButton = document.querySelector("#generate-recommendation");
 const recommendationHint = document.querySelector("#recommendation-hint");
 let canRecommend = false;
+let canReview = false;
+let activeOrganizationId = null;
+let activeSupabase = null;
 
 function setStatus(message, kind = "") {
   status.textContent = message;
@@ -72,7 +76,7 @@ async function loadData(supabase, organizationId) {
   const [recommendations, commitments, events, sources] = await Promise.all([
     supabase
       .from("recommendations")
-      .select("id, title, body, status, risk_class, agent_name, created_at, uncertainty")
+      .select("id, title, body, status, risk_class, agent_name, created_at, uncertainty, recommendation_citations(evidence_id)")
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
       .limit(8),
@@ -123,17 +127,62 @@ function renderRecommendations(items) {
     title.className = "review-title";
     title.textContent = item.title;
     const status = tag(item.status, item.status === "proposed" ? "review" : "");
-    const risk = tag(`risk: ${item.risk_class}`, item.risk_class === "high" ? "risk" : "");
+    const risk = tag("risk: " + item.risk_class, item.risk_class === "high" ? "risk" : "");
     header.append(title, status, risk);
     const body = document.createElement("p");
     body.className = "review-body";
     body.textContent = item.body;
     const meta = document.createElement("div");
     meta.className = "review-meta";
-    meta.textContent = `Agent: ${item.agent_name} · ${formatDate(item.created_at)}${item.uncertainty ? ` · Uncertainty: ${item.uncertainty}` : ""}`;
+    const citationCount = item.recommendation_citations?.length ?? 0;
+    meta.textContent = "Agent: " + item.agent_name + " · " + formatDate(item.created_at) + " · Evidence: " + citationCount + (item.uncertainty ? " · Uncertainty: " + item.uncertainty : "");
     li.append(header, body, meta);
+
+    if (canReview && ["draft", "proposed"].includes(item.status)) {
+      const actions = document.createElement("div");
+      actions.className = "decision-actions";
+      const approve = document.createElement("button");
+      approve.type = "button";
+      approve.className = "approve";
+      approve.textContent = "Approve";
+      approve.addEventListener("click", () => void submitReview(item.id, "approved"));
+      const reject = document.createElement("button");
+      reject.type = "button";
+      reject.className = "reject";
+      reject.textContent = "Reject";
+      reject.addEventListener("click", () => void submitReview(item.id, "rejected"));
+      const correct = document.createElement("button");
+      correct.type = "button";
+      correct.className = "secondary";
+      correct.textContent = "Record correction";
+      correct.addEventListener("click", () => void submitReview(item.id, "corrected"));
+      actions.append(approve, reject, correct);
+      li.append(actions);
+    }
+
     recommendationList.append(li);
   }
+}
+
+async function submitReview(recommendationId, decision) {
+  let correction = "";
+  if (decision === "corrected") {
+    correction = window.prompt("What should be corrected before this proposal is reconsidered?")?.trim() ?? "";
+    if (!correction) return;
+  }
+
+  setStatus(decision === "approved" ? "Recording approval…" : decision === "rejected" ? "Recording rejection…" : "Recording correction…");
+  const { data, error } = await activeSupabase.functions.invoke("review-recommendation", {
+    body: { recommendation_id: recommendationId, decision, correction },
+  });
+  if (error || data?.error) {
+    setStatus(error?.message || data?.error || "Recommendation review failed.", "error");
+    return;
+  }
+
+  const refreshed = await loadData(activeSupabase, activeOrganizationId);
+  renderRecommendations(refreshed.recommendations);
+  setStatus(decision === "approved" ? "Recommendation approved. No operational action was executed." : decision === "rejected" ? "Recommendation rejected and recorded." : "Correction recorded; the proposal is back in draft.", "success");
 }
 
 function renderCommitments(items) {
@@ -238,6 +287,9 @@ async function renderSession(supabase, session) {
     setStatus("Loading review queue…");
     const workspace = await loadWorkspace(supabase, session.user.id);
     canRecommend = CONTRIBUTOR_ROLES.has(workspace.membership.role);
+    canReview = REVIEWER_ROLES.has(workspace.membership.role);
+    activeOrganizationId = workspace.organization.id;
+    activeSupabase = supabase;
     const data = await loadData(supabase, workspace.organization.id);
     signedInEmail.textContent = session.user.email || "authenticated user";
     organizationName.textContent = `${workspace.organization.name} · ${workspace.membership.role}`;
@@ -279,6 +331,9 @@ async function start() {
   document.querySelector("#sign-out").addEventListener("click", async () => {
     await supabase.auth.signOut();
     canRecommend = false;
+    canReview = false;
+    activeOrganizationId = null;
+    activeSupabase = null;
     show(signInView);
     setStatus("Signed out.");
   });
